@@ -1,0 +1,368 @@
+{
+    "zabbix_export": {
+        "version": "7.2",
+        "template_groups": [
+            {
+                "uuid": "53c174a2e33b453fb027a1e359895a48",
+                "name": "availability"
+            },
+            {
+                "uuid": "8644e511707949f49016315b1ccb8ddd",
+                "name": "custom"
+            },
+            {
+                "uuid": "7aa98c1729a342898c51a59c233de4d5",
+                "name": "icmp"
+            },
+            {
+                "uuid": "e71cdea4924d4913993462664c19becb",
+                "name": "snmp"
+            },
+            {
+                "uuid": "7df96b18c230490a9a0a9e2307226338",
+                "name": "Templates"
+            }
+        ],
+        "templates": [
+            {
+                "uuid": "58786d1e2106440eb0caa00d06fe6ec8",
+                "template": "custom.availability.basic",
+                "name": "custom.availability.basic",
+                "templates": [
+                    {
+                        "name": "custom.availability.icmp"
+                    },
+                    {
+                        "name": "custom.availability.snmp"
+                    }
+                ],
+                "groups": [
+                    {
+                        "name": "availability"
+                    },
+                    {
+                        "name": "custom"
+                    },
+                    {
+                        "name": "Templates"
+                    }
+                ],
+                "tags": [
+                    {
+                        "tag": "class",
+                        "value": "health"
+                    }
+                ]
+            },
+            {
+                "uuid": "5543a18a126948589b0b1f91c5898fbd",
+                "template": "custom.availability.icmp",
+                "name": "custom.availability.icmp",
+                "groups": [
+                    {
+                        "name": "custom"
+                    },
+                    {
+                        "name": "icmp"
+                    },
+                    {
+                        "name": "Templates"
+                    }
+                ],
+                "items": [
+                    {
+                        "uuid": "c374623ba0334d5ca1744b168d9f6de0",
+                        "name": "icmp ping",
+                        "type": "SIMPLE",
+                        "key": "icmpping",
+                        "delay": "{$ICMP.INTERVAL}",
+                        "history": "7d",
+                        "trends": "90d",
+                        "valuemap": {
+                            "name": "service state"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "health"
+                            },
+                            {
+                                "tag": "component",
+                                "value": "network"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "c532f64446444fe49c35c00fb7212b62",
+                                "expression": "max(/custom.availability.icmp/icmpping,#3)=0",
+                                "name": "unavailable by icmp ping",
+                                "priority": "HIGH",
+                                "tags": [
+                                    {
+                                        "tag": "scope",
+                                        "value": "availability"
+                                    },
+                                    {
+                                        "tag": "scope",
+                                        "value": "notice"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "acee3782e6e24bbf9db9bae8f5ddc8f1",
+                        "name": "icmp loss",
+                        "type": "SIMPLE",
+                        "key": "icmppingloss",
+                        "delay": "{$ICMP.INTERVAL}",
+                        "history": "7d",
+                        "value_type": "FLOAT",
+                        "trends": "90d",
+                        "units": "%",
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "health"
+                            },
+                            {
+                                "tag": "component",
+                                "value": "network"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "acf177958c6d484494301a04d246b0a6",
+                                "expression": "min(/custom.availability.icmp/icmppingloss,5m)>{$ICMP.LOSS.WARN} and min(/custom.availability.icmp/icmppingloss,5m)<10",
+                                "name": "high icmp ping loss",
+                                "opdata": "loss: {ITEM.LASTVALUE1}",
+                                "priority": "WARNING",
+                                "dependencies": [
+                                    {
+                                        "name": "unavailable by icmp ping",
+                                        "expression": "max(/custom.availability.icmp/icmpping,#3)=0"
+                                    }
+                                ],
+                                "tags": [
+                                    {
+                                        "tag": "scope",
+                                        "value": "availability"
+                                    },
+                                    {
+                                        "tag": "scope",
+                                        "value": "performance"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "5aecfe1bd1c5481db40a8afe555bae65",
+                        "name": "icmp response time",
+                        "type": "SIMPLE",
+                        "key": "icmppingsec",
+                        "delay": "{$ICMP.INTERVAL}",
+                        "history": "7d",
+                        "value_type": "FLOAT",
+                        "trends": "90d",
+                        "units": "s",
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "health"
+                            },
+                            {
+                                "tag": "component",
+                                "value": "network"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "44ddc873cfee41e0a8b6685e9bbc0eab",
+                                "expression": "avg(/custom.availability.icmp/icmppingsec,5m)>{$ICMP.RESPONSE.TIME.WARN}",
+                                "name": "high icmp ping response time",
+                                "opdata": "value: {ITEM.LASTVALUE1}",
+                                "priority": "WARNING",
+                                "dependencies": [
+                                    {
+                                        "name": "high icmp ping loss",
+                                        "expression": "min(/custom.availability.icmp/icmppingloss,5m)>{$ICMP.LOSS.WARN} and min(/custom.availability.icmp/icmppingloss,5m)<10"
+                                    },
+                                    {
+                                        "name": "unavailable by icmp ping",
+                                        "expression": "max(/custom.availability.icmp/icmpping,#3)=0"
+                                    }
+                                ],
+                                "tags": [
+                                    {
+                                        "tag": "scope",
+                                        "value": "availability"
+                                    },
+                                    {
+                                        "tag": "scope",
+                                        "value": "performance"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "tags": [
+                    {
+                        "tag": "class",
+                        "value": "health"
+                    }
+                ],
+                "macros": [
+                    {
+                        "macro": "{$ICMP.INTERVAL}",
+                        "value": "1m"
+                    },
+                    {
+                        "macro": "{$ICMP.LOSS.WARN}",
+                        "value": "20"
+                    },
+                    {
+                        "macro": "{$ICMP.RESPONSE.TIME.WARN}",
+                        "value": "0.15"
+                    }
+                ],
+                "valuemaps": [
+                    {
+                        "uuid": "02047f60d3954d73a1bdf0fa454baa80",
+                        "name": "service state",
+                        "mappings": [
+                            {
+                                "value": "0",
+                                "newvalue": "down"
+                            },
+                            {
+                                "value": "1",
+                                "newvalue": "up"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "15800fe6dc5743a3a231c55943e6ca00",
+                        "name": "zabbix.host.available",
+                        "mappings": [
+                            {
+                                "value": "0",
+                                "newvalue": "not available"
+                            },
+                            {
+                                "value": "1",
+                                "newvalue": "available"
+                            },
+                            {
+                                "value": "2",
+                                "newvalue": "unknown"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "uuid": "c70148c2b8bd4520a735821da4083223",
+                "template": "custom.availability.snmp",
+                "name": "custom.availability.snmp",
+                "groups": [
+                    {
+                        "name": "custom"
+                    },
+                    {
+                        "name": "snmp"
+                    },
+                    {
+                        "name": "Templates"
+                    }
+                ],
+                "items": [
+                    {
+                        "uuid": "cabee1cfdf454ce4b1ff2d73ef3b3992",
+                        "name": "snmp agent availability",
+                        "type": "INTERNAL",
+                        "key": "zabbix[host,snmp,available]",
+                        "delay": "{$SNMP.INTERVAL}",
+                        "history": "14d",
+                        "trends": "90d",
+                        "description": "Availability of SNMP checks on the host. The value of this item corresponds to availability icons in the host list.\nPossible values:\n0 - not available\n1 - available\n2 - unknown",
+                        "valuemap": {
+                            "name": "zabbix.host.available"
+                        },
+                        "preprocessing": [
+                            {
+                                "type": "DISCARD_UNCHANGED_HEARTBEAT",
+                                "parameters": [
+                                    "5m"
+                                ]
+                            }
+                        ],
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "health"
+                            },
+                            {
+                                "tag": "component",
+                                "value": "network"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "8910b3338ed84e929a3099f5431a7954",
+                                "expression": "max(/custom.availability.snmp/zabbix[host,snmp,available],{$SNMP.TIMEOUT})=0",
+                                "name": "no snmp data collection",
+                                "opdata": "current state: {ITEM.LASTVALUE1}",
+                                "priority": "WARNING",
+                                "description": "SNMP is not available for polling. Please check device connectivity and SNMP settings.",
+                                "tags": [
+                                    {
+                                        "tag": "scope",
+                                        "value": "availability"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "tags": [
+                    {
+                        "tag": "class",
+                        "value": "health"
+                    }
+                ],
+                "macros": [
+                    {
+                        "macro": "{$SNMP.INTERVAL}",
+                        "value": "1m"
+                    },
+                    {
+                        "macro": "{$SNMP.TIMEOUT}",
+                        "value": "5m"
+                    }
+                ],
+                "valuemaps": [
+                    {
+                        "uuid": "50e4d1a2b2304e4ba6ca56dc43b8b412",
+                        "name": "zabbix.host.available",
+                        "mappings": [
+                            {
+                                "value": "0",
+                                "newvalue": "not available"
+                            },
+                            {
+                                "value": "1",
+                                "newvalue": "available"
+                            },
+                            {
+                                "value": "2",
+                                "newvalue": "unknown"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

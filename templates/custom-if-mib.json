@@ -1,0 +1,2177 @@
+{
+    "zabbix_export": {
+        "version": "7.2",
+        "template_groups": [
+            {
+                "uuid": "8644e511707949f49016315b1ccb8ddd",
+                "name": "custom"
+            },
+            {
+                "uuid": "36bff6c29af64692839d077febfc7079",
+                "name": "Templates/Network devices"
+            }
+        ],
+        "templates": [
+            {
+                "uuid": "c9e45901e6ad4d39a38bef46c7b7c15c",
+                "template": "custom.if-mib",
+                "name": "custom.if-mib",
+                "description": "IF-MIB",
+                "groups": [
+                    {
+                        "name": "custom"
+                    },
+                    {
+                        "name": "Templates/Network devices"
+                    }
+                ],
+                "items": [
+                    {
+                        "uuid": "2ed6866f88314686a15c66931df393a8",
+                        "name": "walk discovery - network interfaces",
+                        "type": "SNMP_AGENT",
+                        "snmp_oid": "walk[1.3.6.1.2.1.2.2.1.2,1.3.6.1.2.1.2.2.1.3,1.3.6.1.2.1.2.2.1.7,1.3.6.1.2.1.2.2.1.8,1.3.6.1.2.1.2.2.1.11,1.3.6.1.2.1.2.2.1.13,1.3.6.1.2.1.2.2.1.14,1.3.6.1.2.1.2.2.1.17,1.3.6.1.2.1.2.2.1.19,1.3.6.1.2.1.2.2.1.20,1.3.6.1.2.1.31.1.1.1.1,1.3.6.1.2.1.31.1.1.1.2,1.3.6.1.2.1.31.1.1.1.3,1.3.6.1.2.1.31.1.1.1.4,1.3.6.1.2.1.31.1.1.1.5,1.3.6.1.2.1.31.1.1.1.6,1.3.6.1.2.1.31.1.1.1.10,1.3.6.1.2.1.31.1.1.1.15,1.3.6.1.2.1.31.1.1.1.18]",
+                        "key": "walk.discovery.net.if",
+                        "delay": "3m",
+                        "history": "0",
+                        "value_type": "TEXT",
+                        "timeout": "{$NET.IF.WALK.TIMEOUT}",
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "raw"
+                            }
+                        ]
+                    }
+                ],
+                "discovery_rules": [
+                    {
+                        "uuid": "c4961d2e337f4060840ccbee2d51d576",
+                        "name": "network interfaces discovery",
+                        "type": "DEPENDENT",
+                        "key": "discovery.entity.sensors",
+                        "filter": {
+                            "evaltype": "AND",
+                            "conditions": [
+                                {
+                                    "macro": "{#IF.ADMIN.STATUS}",
+                                    "value": "{$NET.IF.IF.ADMIN.STATUS.MATCHES}"
+                                },
+                                {
+                                    "macro": "{#IF.ADMIN.STATUS}",
+                                    "value": "{$NET.IF.IF.ADMIN.STATUS.NOT.MATCHES}",
+                                    "operator": "NOT_MATCHES_REGEX"
+                                },
+                                {
+                                    "macro": "{#IF.ALIAS}",
+                                    "value": "{$NET.IF.IF.ALIAS.MATCHES}"
+                                },
+                                {
+                                    "macro": "{#IF.ALIAS}",
+                                    "value": "{$NET.IF.IF.ALIAS.NOT.MATCHES}",
+                                    "operator": "NOT_MATCHES_REGEX"
+                                },
+                                {
+                                    "macro": "{#IF.DESCR}",
+                                    "value": "{$NET.IF.IF.DESCR.MATCHES}"
+                                },
+                                {
+                                    "macro": "{#IF.DESCR}",
+                                    "value": "{$NET.IF.IF.DESCR.NOT.MATCHES}",
+                                    "operator": "NOT_MATCHES_REGEX"
+                                },
+                                {
+                                    "macro": "{#IF.NAME}",
+                                    "value": "{$NET.IF.IF.NAME.MATCHES}"
+                                },
+                                {
+                                    "macro": "{#IF.NAME}",
+                                    "value": "{$NET.IF.IF.NAME.NOT.MATCHES}",
+                                    "operator": "NOT_MATCHES_REGEX"
+                                },
+                                {
+                                    "macro": "{#IF.OPER.STATUS}",
+                                    "value": "{$NET.IF.IF.OPER.STATUS.MATCHES}"
+                                },
+                                {
+                                    "macro": "{#IF.OPER.STATUS}",
+                                    "value": "{$NET.IF.IF.OPER.STATUS.NOT.MATCHES}",
+                                    "operator": "NOT_MATCHES_REGEX"
+                                },
+                                {
+                                    "macro": "{#IF.TYPE}",
+                                    "value": "{$NET.IF.IF.TYPE.MATCHES}"
+                                },
+                                {
+                                    "macro": "{#IF.TYPE}",
+                                    "value": "{$NET.IF.IF.TYPE.NOT.MATCHES}",
+                                    "operator": "NOT_MATCHES_REGEX"
+                                }
+                            ]
+                        },
+                        "description": "Discovering interfaces from IF-MIB.",
+                        "item_prototypes": [
+                            {
+                                "uuid": "3ca0013ae8dc43a298e3d36c29db5c8b",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): in pkts broadcast",
+                                "type": "DEPENDENT",
+                                "key": "net.if.in.broadcast[ifInBroadcastPkts.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "90d",
+                                "units": "pps",
+                                "description": "MIB: IF-MIB - RFC 2863\nThe number of packets, delivered by this sub-layer to a higher (sub-)layer, which were addressed to a broadcast address at this sub-layer. Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.31.1.1.1.3.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED"
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "d49723461ed146a8a1d3755a07034398",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): in pkts discarded",
+                                "type": "DEPENDENT",
+                                "key": "net.if.in.discards[ifInDiscards.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "60d",
+                                "units": "pps",
+                                "description": "MIB: IF-MIB - RFC 2863\nThe number of inbound packets which were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol.  One possible reason for discarding such a packet could be to free up buffer space.  Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.2.2.1.13.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED"
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "c18f8134983b4740a6c7a21ebfe2987a",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): in pkts with errors",
+                                "type": "DEPENDENT",
+                                "key": "net.if.in.errors[ifInErrors.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "60d",
+                                "units": "pps",
+                                "description": "MIB: IF-MIB - RFC 2863\nFor packet-oriented interfaces, the number of inbound packets that contained errors preventing them from being deliverable to a higher-layer protocol. For character-oriented or fixed-length interfaces, the number of inbound transmission units that contained errors preventing them from being deliverable to a higher-layer protocol. Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED"
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "151480611f364d298f7250cb59e89841",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): in pkts multicast",
+                                "type": "DEPENDENT",
+                                "key": "net.if.in.multicast[ifInMulticastPkts.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "90d",
+                                "units": "pps",
+                                "description": "MIB: IF-MIB - RFC 2863\nThe number of packets, delivered by this sub-layer to a higher (sub-)layer, which were addressed to a multicast address at this sub-layer.  For a MAC layer protocol, this includes both Group and Functional addresses. Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.31.1.1.1.2.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED"
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "feececa3f2f04ce2b7a3e437ed7a8260",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): in pkts unicast",
+                                "type": "DEPENDENT",
+                                "key": "net.if.in.unicasts[ifInUcastPkts.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "90d",
+                                "units": "pps",
+                                "description": "MIB: IF-MIB - RFC 2863\nThe number of inbound packets which were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol.  One possible reason for discarding such a packet could be to free up buffer space.  Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.2.2.1.11.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED"
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "ab910e997a494849935cc11ff0d9f8c9",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): bits received",
+                                "type": "DEPENDENT",
+                                "key": "net.if.in[ifHCInOctets.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "180d",
+                                "units": "bps",
+                                "description": "MIB: IF-MIB - RFC 2863\nThe total number of octets received on the interface, including framing characters. This object is a 64-bit version of ifInOctets. Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.31.1.1.1.6.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "MULTIPLIER",
+                                        "parameters": [
+                                            "8"
+                                        ]
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED_HEARTBEAT",
+                                        "parameters": [
+                                            "1h"
+                                        ]
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "e344a9420ddf4754a745c46c9d782f50",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): out pkts broadcast",
+                                "type": "DEPENDENT",
+                                "key": "net.if.out.broadcast[ifOutBroadcastPkts.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "90d",
+                                "units": "pps",
+                                "description": "MIB: IF-MIB - RFC 2863\nThe total number of packets that higher-level protocols requested be transmitted, and which were addressed to a broadcast address at this sub-layer, including those that were discarded or not sent. Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.31.1.1.1.5.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED"
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "d16d6319e5fa4298adf5fbb2441c08a6",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): out pkts discarded",
+                                "type": "DEPENDENT",
+                                "key": "net.if.out.discards[ifOutDiscards.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "60d",
+                                "units": "pps",
+                                "description": "MIB: IF-MIB - RFC 2863\nThe number of outbound packets which were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol. One possible reason for discarding such a packet could be to free up buffer space.  Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.2.2.1.19.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED"
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "4bc23f8502d9457da4690f5cdd8587f5",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): out pkts with errors",
+                                "type": "DEPENDENT",
+                                "key": "net.if.out.errors[ifOutErrors.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "60d",
+                                "units": "pps",
+                                "description": "MIB: IF-MIB - RFC 2863\nFor packet-oriented interfaces, the number of outbound packets that contained errors preventing them from being deliverable to a higher-layer protocol.  For character-oriented or fixed-length interfaces, the number of outbound transmission units that contained errors preventing them from being deliverable to a higher-layer protocol. Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED"
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "160ee75d02b3443d8c421fade4f49515",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): out pkts multicast",
+                                "type": "DEPENDENT",
+                                "key": "net.if.out.multicast[ifOutMulticastPkts.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "90d",
+                                "units": "pps",
+                                "description": "MIB: IF-MIB - RFC 2863\nThe total number of packets that higher-level protocols requested be transmitted, and which were addressed to a multicast address at this sub-layer, including those that were discarded or not sent.  For a MAC layer protocol, this includes both Group and Functional addresses. Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.31.1.1.1.4.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED"
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "9954416653364aafbac8e1d7af71aa8f",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): out pkts unicast",
+                                "type": "DEPENDENT",
+                                "key": "net.if.out.unicasts[ifOutUcastPkts.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "60d",
+                                "units": "pps",
+                                "description": "MIB: IF-MIB - RFC2863\nThe number of outbound packets which were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol. One possible reason for discarding such a packet could be to free up buffer space. Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.2.2.1.17.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED"
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "9bf350b347a940b1bec5c1bdee6805e5",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): bits sent",
+                                "type": "DEPENDENT",
+                                "key": "net.if.out[ifHCOutOctets.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "180d",
+                                "units": "bps",
+                                "description": "MIB: IF-MIB - RFC 2863\nThe total number of octets transmitted out of the interface, including framing characters. This object is a 64-bit version of ifOutOctets.Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.31.1.1.1.10.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "CHANGE_PER_SECOND"
+                                    },
+                                    {
+                                        "type": "MULTIPLIER",
+                                        "parameters": [
+                                            "8"
+                                        ]
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED_HEARTBEAT",
+                                        "parameters": [
+                                            "1h"
+                                        ]
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "5725bd6c82e24bdbbb383cb4b3876c74",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): speed",
+                                "type": "DEPENDENT",
+                                "key": "net.if.speed[ifHighSpeed.{#SNMPINDEX}]",
+                                "history": "7d",
+                                "trends": "60d",
+                                "units": "bps",
+                                "description": "MIB: IF-MIB - RFC 2863\nAn estimate of the interface's current bandwidth in units of 1,000,000 bits per second. If this object reports a value of `n' then the speed of the interface is somewhere in the range of `n-500,000' to`n+499,999'.  For interfaces which do not vary in bandwidth or for those where no accurate estimation can be made, this object should contain the nominal bandwidth. For a sub-layer which has no concept of bandwidth, this object should be zero.",
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.31.1.1.1.15.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "MULTIPLIER",
+                                        "parameters": [
+                                            "1000000"
+                                        ]
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED_HEARTBEAT",
+                                        "parameters": [
+                                            "2h"
+                                        ]
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "3ed49f8b3b2c4270ab698daa107c819e",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): operational status",
+                                "type": "DEPENDENT",
+                                "key": "net.if.status[ifOperStatus.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "60d",
+                                "description": "MIB: IF-MIB - RFC 2863\nThe current operational state of the interface.  The testing(3) state indicates that no operational packets can be passed.  If ifAdminStatus is down(2) then ifOperStatus should be down(2).  If ifAdminStatus is changed to up(1) then ifOperStatus should change to up(1) if the interface is ready to transmit and receive network traffic; it should change to dormant(5) if the interface is waiting for external actions (such as a serial line waiting for an incoming connection); it should remain in the down(2) state if and only if there is a fault that prevents it from going to the up(1) state; it should remain in the notPresent(6) state if the interface has missing (typically, hardware) components.",
+                                "valuemap": {
+                                    "name": "if-mib-ifoperstatus"
+                                },
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED_HEARTBEAT",
+                                        "parameters": [
+                                            "1h"
+                                        ]
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ],
+                                "trigger_prototypes": [
+                                    {
+                                        "uuid": "4a8300b628ff4afda2bcf57001b10bb9",
+                                        "expression": "{$IFCONTROL:\"{#IF.NAME}\"}=1 and last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#2))",
+                                        "recovery_mode": "RECOVERY_EXPRESSION",
+                                        "recovery_expression": "last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:\"{#IF.NAME}\"}=0",
+                                        "name": "int {#IF.NAME} ({#IF.ALIAS}): link down",
+                                        "opdata": "Current state: {ITEM.LASTVALUE1}",
+                                        "priority": "AVERAGE",
+                                        "description": "This trigger expression works as follows:\n1. It can be triggered if the operations status is down.\n2. `{$IFCONTROL:\"{#IFNAME}\"}=1` - a user can redefine context macro to value - 0. That marks this interface as not important. No new trigger will be fired if this interface is down.\n3. `{TEMPLATE_NAME:METRIC.diff()}=1` - the trigger fires only if the operational status was up to (1) sometime before (so, do not fire for the 'eternal off' interfaces.)\n\nWARNING: if closed manually - it will not fire again on the next poll, because of .diff.",
+                                        "manual_close": "YES",
+                                        "tags": [
+                                            {
+                                                "tag": "interface",
+                                                "value": "{#IF.NAME}"
+                                            },
+                                            {
+                                                "tag": "scope",
+                                                "value": "availability"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "3e0ba885e0d847adbed646b793f48c62",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): int type",
+                                "type": "DEPENDENT",
+                                "key": "net.if.type[ifType.{#SNMPINDEX}]",
+                                "history": "14d",
+                                "trends": "0",
+                                "description": "MIB: IF-MIB - RFC 2863\nThe type of interface.  Additional values for ifType are assigned by the Internet Assigned Numbers Authority (IANA), through updating the syntax of the IANAifType textua convention.",
+                                "valuemap": {
+                                    "name": "if-mib-iftype"
+                                },
+                                "preprocessing": [
+                                    {
+                                        "type": "SNMP_WALK_VALUE",
+                                        "parameters": [
+                                            "1.3.6.1.2.1.2.2.1.3.{#SNMPINDEX}",
+                                            "0"
+                                        ]
+                                    },
+                                    {
+                                        "type": "DISCARD_UNCHANGED_HEARTBEAT",
+                                        "parameters": [
+                                            "12h"
+                                        ]
+                                    }
+                                ],
+                                "master_item": {
+                                    "key": "walk.discovery.net.if"
+                                },
+                                "tags": [
+                                    {
+                                        "tag": "component",
+                                        "value": "interface"
+                                    },
+                                    {
+                                        "tag": "component",
+                                        "value": "network"
+                                    },
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    }
+                                ]
+                            }
+                        ],
+                        "trigger_prototypes": [
+                            {
+                                "uuid": "eecb508bc797415ba7f7d4363b795575",
+                                "expression": "change(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])<0 \nand \nlast(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])>0 \nand\nlast(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])<>10000000\nand (\nlast(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=6 or\nlast(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=7 or\nlast(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=11 or\nlast(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=62 or\nlast(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=69 or\nlast(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=117\n)\nand\n(last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2)",
+                                "recovery_mode": "RECOVERY_EXPRESSION",
+                                "recovery_expression": "(change(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])>0 and last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}],#2)>0) or\n(last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])=2)",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): ethernet has changed to lower speed than it was before",
+                                "opdata": "current reported speed: {ITEM.LASTVALUE1}",
+                                "priority": "INFO",
+                                "description": "This Ethernet connection has transitioned down from its known maximum speed. This might be a sign of autonegotiation issues. Acknowledge to close the problem manually.",
+                                "manual_close": "YES",
+                                "dependencies": [
+                                    {
+                                        "name": "int {#IF.NAME} ({#IF.ALIAS}): link down",
+                                        "expression": "{$IFCONTROL:\"{#IF.NAME}\"}=1 and last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#2))",
+                                        "recovery_expression": "last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:\"{#IF.NAME}\"}=0"
+                                    }
+                                ],
+                                "tags": [
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    },
+                                    {
+                                        "tag": "scope",
+                                        "value": "performance"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "4f13f75a79ac496ea309663e8d415983",
+                                "expression": "(avg(/custom.if-mib/net.if.in[ifHCInOctets.{#SNMPINDEX}],15m)>({$IF.UTIL.MAX:\"{#IF.NAME}\"}/100)*last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}]) or\navg(/custom.if-mib/net.if.out[ifHCOutOctets.{#SNMPINDEX}],15m)>({$IF.UTIL.MAX:\"{#IF.NAME}\"}/100)*last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])) and\nlast(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])>0",
+                                "recovery_mode": "RECOVERY_EXPRESSION",
+                                "recovery_expression": "avg(/custom.if-mib/net.if.in[ifHCInOctets.{#SNMPINDEX}],15m)<(({$IF.UTIL.MAX:\"{#IF.NAME}\"}-3)/100)*last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}]) and\navg(/custom.if-mib/net.if.out[ifHCOutOctets.{#SNMPINDEX}],15m)<(({$IF.UTIL.MAX:\"{#IF.NAME}\"}-3)/100)*last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): high bandwidth usage",
+                                "event_name": "int {#IF.NAME}({#IF.ALIAS}): high bandwidth usage (>{$IF.UTIL.MAX:\"{#IF.NAME}\"}%)",
+                                "opdata": "In: {ITEM.LASTVALUE1}, out: {ITEM.LASTVALUE3}, speed: {ITEM.LASTVALUE2}",
+                                "priority": "WARNING",
+                                "description": "The utilization of the network interface is close to its estimated maximum bandwidth.",
+                                "manual_close": "YES",
+                                "dependencies": [
+                                    {
+                                        "name": "int {#IF.NAME} ({#IF.ALIAS}): link down",
+                                        "expression": "{$IFCONTROL:\"{#IF.NAME}\"}=1 and last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#2))",
+                                        "recovery_expression": "last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:\"{#IF.NAME}\"}=0"
+                                    }
+                                ],
+                                "tags": [
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    },
+                                    {
+                                        "tag": "scope",
+                                        "value": "performance"
+                                    }
+                                ]
+                            },
+                            {
+                                "uuid": "0085c50688854ed0bf39ca9adc44e914",
+                                "expression": "min(/custom.if-mib/net.if.in.errors[ifInErrors.{#SNMPINDEX}],5m)>{$IF.ERRORS.WARN:\"{#IF.NAME}\"}\nor min(/custom.if-mib/net.if.out.errors[ifOutErrors.{#SNMPINDEX}],5m)>{$IF.ERRORS.WARN:\"{#IF.NAME}\"}",
+                                "recovery_mode": "RECOVERY_EXPRESSION",
+                                "recovery_expression": "max(/custom.if-mib/net.if.in.errors[ifInErrors.{#SNMPINDEX}],5m)<{$IF.ERRORS.WARN:\"{#IF.NAME}\"}*0.8\nand max(/custom.if-mib/net.if.out.errors[ifOutErrors.{#SNMPINDEX}],5m)<{$IF.ERRORS.WARN:\"{#IF.NAME}\"}*0.8",
+                                "name": "int {#IF.NAME} ({#IF.ALIAS}): high error rate",
+                                "event_name": "int {#IF.NAME}({#IF.ALIAS}): High error rate (>{$IF.ERRORS.WARN:\"{#IF.NAME}\"} for 5m)",
+                                "opdata": "errors in: {ITEM.LASTVALUE1}, errors out: {ITEM.LASTVALUE2}",
+                                "priority": "WARNING",
+                                "description": "It recovers when it is below 80% of the `{$IF.ERRORS.WARN:\"{#IF.NAME}\"}` threshold.",
+                                "manual_close": "YES",
+                                "dependencies": [
+                                    {
+                                        "name": "int {#IF.NAME} ({#IF.ALIAS}): link down",
+                                        "expression": "{$IFCONTROL:\"{#IF.NAME}\"}=1 and last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#2))",
+                                        "recovery_expression": "last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:\"{#IF.NAME}\"}=0"
+                                    }
+                                ],
+                                "tags": [
+                                    {
+                                        "tag": "interface",
+                                        "value": "{#IF.NAME}"
+                                    },
+                                    {
+                                        "tag": "scope",
+                                        "value": "availability"
+                                    },
+                                    {
+                                        "tag": "scope",
+                                        "value": "performance"
+                                    }
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "walk.discovery.net.if"
+                        },
+                        "preprocessing": [
+                            {
+                                "type": "SNMP_WALK_TO_JSON",
+                                "parameters": [
+                                    "{#IF.DESCR}",
+                                    "1.3.6.1.2.1.2.2.1.2",
+                                    "0",
+                                    "{#IF.TYPE}",
+                                    "1.3.6.1.2.1.2.2.1.3",
+                                    "0",
+                                    "{#IF.ADMIN.STATUS}",
+                                    "1.3.6.1.2.1.2.2.1.7",
+                                    "0",
+                                    "{#IF.OPER.STATUS}",
+                                    "1.3.6.1.2.1.2.2.1.8",
+                                    "0",
+                                    "{#IF.NAME}",
+                                    "1.3.6.1.2.1.31.1.1.1.1",
+                                    "0",
+                                    "{#IF.ALIAS}",
+                                    "1.3.6.1.2.1.31.1.1.1.18",
+                                    "0"
+                                ]
+                            },
+                            {
+                                "type": "DISCARD_UNCHANGED_HEARTBEAT",
+                                "parameters": [
+                                    "1h"
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "tags": [
+                    {
+                        "tag": "class",
+                        "value": "network"
+                    }
+                ],
+                "macros": [
+                    {
+                        "macro": "{$IF.CONTROL}",
+                        "value": "1"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.ADMIN.STATUS.MATCHES}",
+                        "value": "^.*",
+                        "description": "any"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.ADMIN.STATUS.NOT.MATCHES}",
+                        "value": "^2$",
+                        "description": "ignore nopresent(6)"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.ALIAS.MATCHES}",
+                        "value": ".*"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.ALIAS.NOT.MATCHES}",
+                        "value": "CHANGE_IF_NEEDED"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.DESCR.MATCHES}",
+                        "value": ".*"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.DESCR.NOT.MATCHES}",
+                        "value": "CHANGE_IF_NEEDED"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.NAME.MATCHES}",
+                        "value": "^.*$"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.NAME.NOT.MATCHES}",
+                        "value": "(^Software Loopback Interface|^NULL[0-9.]*$|^[Ll]o[0-9.]*$|^[Ss]ystem$|^Nu[0-9.]*$|^veth[0-9a-z]+$|docker[0-9]+|br-[a-z0-9]{12}|^loopback*|^cap)",
+                        "description": "filter out loopbacks, nulls, docker veth links and docker0 bridge by default"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.OPER.STATUS.MATCHES}",
+                        "value": "^.*"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.OPER.STATUS.NOT.MATCHES}",
+                        "value": "^2$"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.TYPE.MATCHES}",
+                        "value": ".*"
+                    },
+                    {
+                        "macro": "{$NET.IF.IF.TYPE.NOT.MATCHES}",
+                        "value": "CHANGE_IF_NEEDED"
+                    },
+                    {
+                        "macro": "{$NET.IF.WALK.TIMEOUT}",
+                        "value": "3s",
+                        "description": "set bigger timeout if needed"
+                    }
+                ],
+                "valuemaps": [
+                    {
+                        "uuid": "b89a1663d34647b78fb0514bff5290ff",
+                        "name": "if-mib-ifoperstatus",
+                        "mappings": [
+                            {
+                                "value": "1",
+                                "newvalue": "up"
+                            },
+                            {
+                                "value": "2",
+                                "newvalue": "down"
+                            },
+                            {
+                                "value": "4",
+                                "newvalue": "unknown"
+                            },
+                            {
+                                "value": "5",
+                                "newvalue": "dormant"
+                            },
+                            {
+                                "value": "6",
+                                "newvalue": "notPresent"
+                            },
+                            {
+                                "value": "7",
+                                "newvalue": "lowerLayerDown"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "4e9e54aea9b94316aaa3fecd29cf0aef",
+                        "name": "if-mib-iftype",
+                        "mappings": [
+                            {
+                                "value": "1",
+                                "newvalue": "other"
+                            },
+                            {
+                                "value": "2",
+                                "newvalue": "regular1822"
+                            },
+                            {
+                                "value": "3",
+                                "newvalue": "hdh1822"
+                            },
+                            {
+                                "value": "4",
+                                "newvalue": "ddnX25"
+                            },
+                            {
+                                "value": "5",
+                                "newvalue": "rfc877x25"
+                            },
+                            {
+                                "value": "6",
+                                "newvalue": "ethernetCsmacd"
+                            },
+                            {
+                                "value": "7",
+                                "newvalue": "iso88023Csmacd"
+                            },
+                            {
+                                "value": "8",
+                                "newvalue": "iso88024TokenBus"
+                            },
+                            {
+                                "value": "9",
+                                "newvalue": "iso88025TokenRing"
+                            },
+                            {
+                                "value": "10",
+                                "newvalue": "iso88026Man"
+                            },
+                            {
+                                "value": "11",
+                                "newvalue": "starLan"
+                            },
+                            {
+                                "value": "12",
+                                "newvalue": "proteon10Mbit"
+                            },
+                            {
+                                "value": "13",
+                                "newvalue": "proteon80Mbit"
+                            },
+                            {
+                                "value": "14",
+                                "newvalue": "hyperchannel"
+                            },
+                            {
+                                "value": "15",
+                                "newvalue": "fddi"
+                            },
+                            {
+                                "value": "16",
+                                "newvalue": "lapb"
+                            },
+                            {
+                                "value": "17",
+                                "newvalue": "sdlc"
+                            },
+                            {
+                                "value": "18",
+                                "newvalue": "ds1"
+                            },
+                            {
+                                "value": "19",
+                                "newvalue": "e1"
+                            },
+                            {
+                                "value": "20",
+                                "newvalue": "basicISDN"
+                            },
+                            {
+                                "value": "21",
+                                "newvalue": "primaryISDN"
+                            },
+                            {
+                                "value": "22",
+                                "newvalue": "propPointToPointSerial"
+                            },
+                            {
+                                "value": "23",
+                                "newvalue": "ppp"
+                            },
+                            {
+                                "value": "24",
+                                "newvalue": "softwareLoopback"
+                            },
+                            {
+                                "value": "25",
+                                "newvalue": "eon"
+                            },
+                            {
+                                "value": "26",
+                                "newvalue": "ethernet3Mbit"
+                            },
+                            {
+                                "value": "27",
+                                "newvalue": "nsip"
+                            },
+                            {
+                                "value": "28",
+                                "newvalue": "slip"
+                            },
+                            {
+                                "value": "29",
+                                "newvalue": "ultra"
+                            },
+                            {
+                                "value": "30",
+                                "newvalue": "ds3"
+                            },
+                            {
+                                "value": "31",
+                                "newvalue": "sip"
+                            },
+                            {
+                                "value": "32",
+                                "newvalue": "frameRelay"
+                            },
+                            {
+                                "value": "33",
+                                "newvalue": "rs232"
+                            },
+                            {
+                                "value": "34",
+                                "newvalue": "para"
+                            },
+                            {
+                                "value": "35",
+                                "newvalue": "arcnet"
+                            },
+                            {
+                                "value": "36",
+                                "newvalue": "arcnetPlus"
+                            },
+                            {
+                                "value": "37",
+                                "newvalue": "atm"
+                            },
+                            {
+                                "value": "38",
+                                "newvalue": "miox25"
+                            },
+                            {
+                                "value": "39",
+                                "newvalue": "sonet"
+                            },
+                            {
+                                "value": "40",
+                                "newvalue": "x25ple"
+                            },
+                            {
+                                "value": "41",
+                                "newvalue": "iso88022llc"
+                            },
+                            {
+                                "value": "42",
+                                "newvalue": "localTalk"
+                            },
+                            {
+                                "value": "43",
+                                "newvalue": "smdsDxi"
+                            },
+                            {
+                                "value": "44",
+                                "newvalue": "frameRelayService"
+                            },
+                            {
+                                "value": "45",
+                                "newvalue": "v35"
+                            },
+                            {
+                                "value": "46",
+                                "newvalue": "hssi"
+                            },
+                            {
+                                "value": "47",
+                                "newvalue": "hippi"
+                            },
+                            {
+                                "value": "48",
+                                "newvalue": "modem"
+                            },
+                            {
+                                "value": "49",
+                                "newvalue": "aal5"
+                            },
+                            {
+                                "value": "50",
+                                "newvalue": "sonetPath"
+                            },
+                            {
+                                "value": "51",
+                                "newvalue": "sonetVT"
+                            },
+                            {
+                                "value": "52",
+                                "newvalue": "smdsIcip"
+                            },
+                            {
+                                "value": "53",
+                                "newvalue": "propVirtual"
+                            },
+                            {
+                                "value": "54",
+                                "newvalue": "propMultiplexor"
+                            },
+                            {
+                                "value": "55",
+                                "newvalue": "ieee80212"
+                            },
+                            {
+                                "value": "56",
+                                "newvalue": "fibreChannel"
+                            },
+                            {
+                                "value": "57",
+                                "newvalue": "hippiInterface"
+                            },
+                            {
+                                "value": "58",
+                                "newvalue": "frameRelayInterconnect"
+                            },
+                            {
+                                "value": "59",
+                                "newvalue": "aflane8023"
+                            },
+                            {
+                                "value": "60",
+                                "newvalue": "aflane8025"
+                            },
+                            {
+                                "value": "61",
+                                "newvalue": "cctEmul"
+                            },
+                            {
+                                "value": "62",
+                                "newvalue": "fastEther"
+                            },
+                            {
+                                "value": "63",
+                                "newvalue": "isdn"
+                            },
+                            {
+                                "value": "64",
+                                "newvalue": "v11"
+                            },
+                            {
+                                "value": "65",
+                                "newvalue": "v36"
+                            },
+                            {
+                                "value": "66",
+                                "newvalue": "g703at64k"
+                            },
+                            {
+                                "value": "67",
+                                "newvalue": "g703at2mb"
+                            },
+                            {
+                                "value": "68",
+                                "newvalue": "qllc"
+                            },
+                            {
+                                "value": "69",
+                                "newvalue": "fastEtherFX"
+                            },
+                            {
+                                "value": "70",
+                                "newvalue": "channel"
+                            },
+                            {
+                                "value": "71",
+                                "newvalue": "ieee80211"
+                            },
+                            {
+                                "value": "72",
+                                "newvalue": "ibm370parChan"
+                            },
+                            {
+                                "value": "73",
+                                "newvalue": "escon"
+                            },
+                            {
+                                "value": "74",
+                                "newvalue": "dlsw"
+                            },
+                            {
+                                "value": "75",
+                                "newvalue": "isdns"
+                            },
+                            {
+                                "value": "76",
+                                "newvalue": "isdnu"
+                            },
+                            {
+                                "value": "77",
+                                "newvalue": "lapd"
+                            },
+                            {
+                                "value": "78",
+                                "newvalue": "ipSwitch"
+                            },
+                            {
+                                "value": "79",
+                                "newvalue": "rsrb"
+                            },
+                            {
+                                "value": "80",
+                                "newvalue": "atmLogical"
+                            },
+                            {
+                                "value": "81",
+                                "newvalue": "ds0"
+                            },
+                            {
+                                "value": "82",
+                                "newvalue": "ds0Bundle"
+                            },
+                            {
+                                "value": "83",
+                                "newvalue": "bsc"
+                            },
+                            {
+                                "value": "84",
+                                "newvalue": "async"
+                            },
+                            {
+                                "value": "85",
+                                "newvalue": "cnr"
+                            },
+                            {
+                                "value": "86",
+                                "newvalue": "iso88025Dtr"
+                            },
+                            {
+                                "value": "87",
+                                "newvalue": "eplrs"
+                            },
+                            {
+                                "value": "88",
+                                "newvalue": "arap"
+                            },
+                            {
+                                "value": "89",
+                                "newvalue": "propCnls"
+                            },
+                            {
+                                "value": "90",
+                                "newvalue": "hostPad"
+                            },
+                            {
+                                "value": "91",
+                                "newvalue": "termPad"
+                            },
+                            {
+                                "value": "92",
+                                "newvalue": "frameRelayMPI"
+                            },
+                            {
+                                "value": "93",
+                                "newvalue": "x213"
+                            },
+                            {
+                                "value": "94",
+                                "newvalue": "adsl"
+                            },
+                            {
+                                "value": "95",
+                                "newvalue": "radsl"
+                            },
+                            {
+                                "value": "96",
+                                "newvalue": "sdsl"
+                            },
+                            {
+                                "value": "97",
+                                "newvalue": "vdsl"
+                            },
+                            {
+                                "value": "98",
+                                "newvalue": "iso88025CRFPInt"
+                            },
+                            {
+                                "value": "99",
+                                "newvalue": "myrinet"
+                            },
+                            {
+                                "value": "100",
+                                "newvalue": "voiceEM"
+                            },
+                            {
+                                "value": "101",
+                                "newvalue": "voiceFXO"
+                            },
+                            {
+                                "value": "102",
+                                "newvalue": "voiceFXS"
+                            },
+                            {
+                                "value": "103",
+                                "newvalue": "voiceEncap"
+                            },
+                            {
+                                "value": "104",
+                                "newvalue": "voiceOverIp"
+                            },
+                            {
+                                "value": "105",
+                                "newvalue": "atmDxi"
+                            },
+                            {
+                                "value": "106",
+                                "newvalue": "atmFuni"
+                            },
+                            {
+                                "value": "107",
+                                "newvalue": "atmIma"
+                            },
+                            {
+                                "value": "108",
+                                "newvalue": "pppMultilinkBundle"
+                            },
+                            {
+                                "value": "109",
+                                "newvalue": "ipOverCdlc"
+                            },
+                            {
+                                "value": "110",
+                                "newvalue": "ipOverClaw"
+                            },
+                            {
+                                "value": "111",
+                                "newvalue": "stackToStack"
+                            },
+                            {
+                                "value": "112",
+                                "newvalue": "virtualIpAddress"
+                            },
+                            {
+                                "value": "113",
+                                "newvalue": "mpc"
+                            },
+                            {
+                                "value": "114",
+                                "newvalue": "ipOverAtm"
+                            },
+                            {
+                                "value": "115",
+                                "newvalue": "iso88025Fiber"
+                            },
+                            {
+                                "value": "116",
+                                "newvalue": "tdlc"
+                            },
+                            {
+                                "value": "117",
+                                "newvalue": "gigabitEthernet"
+                            },
+                            {
+                                "value": "118",
+                                "newvalue": "hdlc"
+                            },
+                            {
+                                "value": "119",
+                                "newvalue": "lapf"
+                            },
+                            {
+                                "value": "120",
+                                "newvalue": "v37"
+                            },
+                            {
+                                "value": "121",
+                                "newvalue": "x25mlp"
+                            },
+                            {
+                                "value": "122",
+                                "newvalue": "x25huntGroup"
+                            },
+                            {
+                                "value": "123",
+                                "newvalue": "trasnpHdlc"
+                            },
+                            {
+                                "value": "124",
+                                "newvalue": "interleave"
+                            },
+                            {
+                                "value": "125",
+                                "newvalue": "fast"
+                            },
+                            {
+                                "value": "126",
+                                "newvalue": "ip"
+                            },
+                            {
+                                "value": "127",
+                                "newvalue": "docsCableMaclayer"
+                            },
+                            {
+                                "value": "128",
+                                "newvalue": "docsCableDownstream"
+                            },
+                            {
+                                "value": "129",
+                                "newvalue": "docsCableUpstream"
+                            },
+                            {
+                                "value": "130",
+                                "newvalue": "a12MppSwitch"
+                            },
+                            {
+                                "value": "131",
+                                "newvalue": "tunnel"
+                            },
+                            {
+                                "value": "132",
+                                "newvalue": "coffee"
+                            },
+                            {
+                                "value": "133",
+                                "newvalue": "ces"
+                            },
+                            {
+                                "value": "134",
+                                "newvalue": "atmSubInterface"
+                            },
+                            {
+                                "value": "135",
+                                "newvalue": "l2vlan"
+                            },
+                            {
+                                "value": "136",
+                                "newvalue": "l3ipvlan"
+                            },
+                            {
+                                "value": "137",
+                                "newvalue": "l3ipxvlan"
+                            },
+                            {
+                                "value": "138",
+                                "newvalue": "digitalPowerline"
+                            },
+                            {
+                                "value": "139",
+                                "newvalue": "mediaMailOverIp"
+                            },
+                            {
+                                "value": "140",
+                                "newvalue": "dtm"
+                            },
+                            {
+                                "value": "141",
+                                "newvalue": "dcn"
+                            },
+                            {
+                                "value": "142",
+                                "newvalue": "ipForward"
+                            },
+                            {
+                                "value": "143",
+                                "newvalue": "msdsl"
+                            },
+                            {
+                                "value": "144",
+                                "newvalue": "ieee1394"
+                            },
+                            {
+                                "value": "145",
+                                "newvalue": "if-gsn"
+                            },
+                            {
+                                "value": "146",
+                                "newvalue": "dvbRccMacLayer"
+                            },
+                            {
+                                "value": "147",
+                                "newvalue": "dvbRccDownstream"
+                            },
+                            {
+                                "value": "148",
+                                "newvalue": "dvbRccUpstream"
+                            },
+                            {
+                                "value": "149",
+                                "newvalue": "atmVirtual"
+                            },
+                            {
+                                "value": "150",
+                                "newvalue": "mplsTunnel"
+                            },
+                            {
+                                "value": "151",
+                                "newvalue": "srp"
+                            },
+                            {
+                                "value": "152",
+                                "newvalue": "voiceOverAtm"
+                            },
+                            {
+                                "value": "153",
+                                "newvalue": "voiceOverFrameRelay"
+                            },
+                            {
+                                "value": "154",
+                                "newvalue": "idsl"
+                            },
+                            {
+                                "value": "155",
+                                "newvalue": "compositeLink"
+                            },
+                            {
+                                "value": "156",
+                                "newvalue": "ss7SigLink"
+                            },
+                            {
+                                "value": "157",
+                                "newvalue": "propWirelessP2P"
+                            },
+                            {
+                                "value": "158",
+                                "newvalue": "frForward"
+                            },
+                            {
+                                "value": "159",
+                                "newvalue": "rfc1483"
+                            },
+                            {
+                                "value": "160",
+                                "newvalue": "usb"
+                            },
+                            {
+                                "value": "161",
+                                "newvalue": "ieee8023adLag"
+                            },
+                            {
+                                "value": "162",
+                                "newvalue": "bgppolicyaccounting"
+                            },
+                            {
+                                "value": "163",
+                                "newvalue": "frf16MfrBundle"
+                            },
+                            {
+                                "value": "164",
+                                "newvalue": "h323Gatekeeper"
+                            },
+                            {
+                                "value": "165",
+                                "newvalue": "h323Proxy"
+                            },
+                            {
+                                "value": "166",
+                                "newvalue": "mpls"
+                            },
+                            {
+                                "value": "167",
+                                "newvalue": "mfSigLink"
+                            },
+                            {
+                                "value": "168",
+                                "newvalue": "hdsl2"
+                            },
+                            {
+                                "value": "169",
+                                "newvalue": "shdsl"
+                            },
+                            {
+                                "value": "170",
+                                "newvalue": "ds1FDL"
+                            },
+                            {
+                                "value": "171",
+                                "newvalue": "pos"
+                            },
+                            {
+                                "value": "172",
+                                "newvalue": "dvbAsiIn"
+                            },
+                            {
+                                "value": "173",
+                                "newvalue": "dvbAsiOut"
+                            },
+                            {
+                                "value": "174",
+                                "newvalue": "plc"
+                            },
+                            {
+                                "value": "175",
+                                "newvalue": "nfas"
+                            },
+                            {
+                                "value": "176",
+                                "newvalue": "tr008"
+                            },
+                            {
+                                "value": "177",
+                                "newvalue": "gr303RDT"
+                            },
+                            {
+                                "value": "178",
+                                "newvalue": "gr303IDT"
+                            },
+                            {
+                                "value": "179",
+                                "newvalue": "isup"
+                            },
+                            {
+                                "value": "180",
+                                "newvalue": "propDocsWirelessMaclayer"
+                            },
+                            {
+                                "value": "181",
+                                "newvalue": "propDocsWirelessDownstream"
+                            },
+                            {
+                                "value": "182",
+                                "newvalue": "propDocsWirelessUpstream"
+                            },
+                            {
+                                "value": "183",
+                                "newvalue": "hiperlan2"
+                            },
+                            {
+                                "value": "184",
+                                "newvalue": "propBWAp2Mp"
+                            },
+                            {
+                                "value": "185",
+                                "newvalue": "sonetOverheadChannel"
+                            },
+                            {
+                                "value": "186",
+                                "newvalue": "digitalWrapperOverheadChannel"
+                            },
+                            {
+                                "value": "187",
+                                "newvalue": "aal2"
+                            },
+                            {
+                                "value": "188",
+                                "newvalue": "radioMAC"
+                            },
+                            {
+                                "value": "189",
+                                "newvalue": "atmRadio"
+                            },
+                            {
+                                "value": "190",
+                                "newvalue": "imt"
+                            },
+                            {
+                                "value": "191",
+                                "newvalue": "mvl"
+                            },
+                            {
+                                "value": "192",
+                                "newvalue": "reachDSL"
+                            },
+                            {
+                                "value": "193",
+                                "newvalue": "frDlciEndPt"
+                            },
+                            {
+                                "value": "194",
+                                "newvalue": "atmVciEndPt"
+                            },
+                            {
+                                "value": "195",
+                                "newvalue": "opticalChannel"
+                            },
+                            {
+                                "value": "196",
+                                "newvalue": "opticalTransport"
+                            },
+                            {
+                                "value": "197",
+                                "newvalue": "propAtm"
+                            },
+                            {
+                                "value": "198",
+                                "newvalue": "voiceOverCable"
+                            },
+                            {
+                                "value": "199",
+                                "newvalue": "infiniband"
+                            },
+                            {
+                                "value": "200",
+                                "newvalue": "teLink"
+                            },
+                            {
+                                "value": "201",
+                                "newvalue": "q2931"
+                            },
+                            {
+                                "value": "202",
+                                "newvalue": "virtualTg"
+                            },
+                            {
+                                "value": "203",
+                                "newvalue": "sipTg"
+                            },
+                            {
+                                "value": "204",
+                                "newvalue": "sipSig"
+                            },
+                            {
+                                "value": "205",
+                                "newvalue": "docsCableUpstreamChannel"
+                            },
+                            {
+                                "value": "206",
+                                "newvalue": "econet"
+                            },
+                            {
+                                "value": "207",
+                                "newvalue": "pon155"
+                            },
+                            {
+                                "value": "208",
+                                "newvalue": "pon622"
+                            },
+                            {
+                                "value": "209",
+                                "newvalue": "bridge"
+                            },
+                            {
+                                "value": "210",
+                                "newvalue": "linegroup"
+                            },
+                            {
+                                "value": "211",
+                                "newvalue": "voiceEMFGD"
+                            },
+                            {
+                                "value": "212",
+                                "newvalue": "voiceFGDEANA"
+                            },
+                            {
+                                "value": "213",
+                                "newvalue": "voiceDID"
+                            },
+                            {
+                                "value": "214",
+                                "newvalue": "mpegTransport"
+                            },
+                            {
+                                "value": "215",
+                                "newvalue": "sixToFour"
+                            },
+                            {
+                                "value": "216",
+                                "newvalue": "gtp"
+                            },
+                            {
+                                "value": "217",
+                                "newvalue": "pdnEtherLoop1"
+                            },
+                            {
+                                "value": "218",
+                                "newvalue": "pdnEtherLoop2"
+                            },
+                            {
+                                "value": "219",
+                                "newvalue": "opticalChannelGroup"
+                            },
+                            {
+                                "value": "220",
+                                "newvalue": "homepna"
+                            },
+                            {
+                                "value": "221",
+                                "newvalue": "gfp"
+                            },
+                            {
+                                "value": "222",
+                                "newvalue": "ciscoISLvlan"
+                            },
+                            {
+                                "value": "223",
+                                "newvalue": "actelisMetaLOOP"
+                            },
+                            {
+                                "value": "224",
+                                "newvalue": "fcipLink"
+                            },
+                            {
+                                "value": "225",
+                                "newvalue": "rpr"
+                            },
+                            {
+                                "value": "226",
+                                "newvalue": "qam"
+                            },
+                            {
+                                "value": "227",
+                                "newvalue": "lmp"
+                            },
+                            {
+                                "value": "228",
+                                "newvalue": "cblVectaStar"
+                            },
+                            {
+                                "value": "229",
+                                "newvalue": "docsCableMCmtsDownstream"
+                            },
+                            {
+                                "value": "230",
+                                "newvalue": "adsl2"
+                            },
+                            {
+                                "value": "231",
+                                "newvalue": "macSecControlledIF"
+                            },
+                            {
+                                "value": "232",
+                                "newvalue": "macSecUncontrolledIF"
+                            },
+                            {
+                                "value": "233",
+                                "newvalue": "aviciOpticalEther"
+                            },
+                            {
+                                "value": "234",
+                                "newvalue": "atmbond"
+                            },
+                            {
+                                "value": "235",
+                                "newvalue": "voiceFGDOS"
+                            },
+                            {
+                                "value": "236",
+                                "newvalue": "mocaVersion1"
+                            },
+                            {
+                                "value": "237",
+                                "newvalue": "ieee80216WMAN"
+                            },
+                            {
+                                "value": "238",
+                                "newvalue": "adsl2plus"
+                            },
+                            {
+                                "value": "239",
+                                "newvalue": "dvbRcsMacLayer"
+                            },
+                            {
+                                "value": "240",
+                                "newvalue": "dvbTdm"
+                            },
+                            {
+                                "value": "241",
+                                "newvalue": "dvbRcsTdma"
+                            },
+                            {
+                                "value": "242",
+                                "newvalue": "x86Laps"
+                            },
+                            {
+                                "value": "243",
+                                "newvalue": "wwanPP"
+                            },
+                            {
+                                "value": "244",
+                                "newvalue": "wwanPP2"
+                            },
+                            {
+                                "value": "245",
+                                "newvalue": "voiceEBS"
+                            },
+                            {
+                                "value": "246",
+                                "newvalue": "ifPwType"
+                            },
+                            {
+                                "value": "247",
+                                "newvalue": "ilan"
+                            },
+                            {
+                                "value": "248",
+                                "newvalue": "pip"
+                            },
+                            {
+                                "value": "249",
+                                "newvalue": "aluELP"
+                            },
+                            {
+                                "value": "250",
+                                "newvalue": "gpon"
+                            },
+                            {
+                                "value": "251",
+                                "newvalue": "vdsl2"
+                            },
+                            {
+                                "value": "252",
+                                "newvalue": "capwapDot11Profile"
+                            },
+                            {
+                                "value": "253",
+                                "newvalue": "capwapDot11Bss"
+                            },
+                            {
+                                "value": "254",
+                                "newvalue": "capwapWtpVirtualRadio"
+                            },
+                            {
+                                "value": "255",
+                                "newvalue": "bits"
+                            },
+                            {
+                                "value": "256",
+                                "newvalue": "docsCableUpstreamRfPort"
+                            },
+                            {
+                                "value": "257",
+                                "newvalue": "cableDownstreamRfPort"
+                            },
+                            {
+                                "value": "258",
+                                "newvalue": "vmwareVirtualNic"
+                            },
+                            {
+                                "value": "259",
+                                "newvalue": "ieee802154"
+                            },
+                            {
+                                "value": "260",
+                                "newvalue": "otnOdu"
+                            },
+                            {
+                                "value": "261",
+                                "newvalue": "otnOtu"
+                            },
+                            {
+                                "value": "262",
+                                "newvalue": "ifVfiType"
+                            },
+                            {
+                                "value": "263",
+                                "newvalue": "g9981"
+                            },
+                            {
+                                "value": "264",
+                                "newvalue": "g9982"
+                            },
+                            {
+                                "value": "265",
+                                "newvalue": "g9983"
+                            },
+                            {
+                                "value": "266",
+                                "newvalue": "aluEpon"
+                            },
+                            {
+                                "value": "267",
+                                "newvalue": "aluEponOnu"
+                            },
+                            {
+                                "value": "268",
+                                "newvalue": "aluEponPhysicalUni"
+                            },
+                            {
+                                "value": "269",
+                                "newvalue": "aluEponLogicalLink"
+                            },
+                            {
+                                "value": "270",
+                                "newvalue": "aluGponOnu"
+                            },
+                            {
+                                "value": "271",
+                                "newvalue": "aluGponPhysicalUni"
+                            },
+                            {
+                                "value": "272",
+                                "newvalue": "vmwareNicTeam"
+                            },
+                            {
+                                "value": "277",
+                                "newvalue": "docsOfdmDownstream"
+                            },
+                            {
+                                "value": "278",
+                                "newvalue": "docsOfdmaUpstream"
+                            },
+                            {
+                                "value": "279",
+                                "newvalue": "gfast"
+                            },
+                            {
+                                "value": "280",
+                                "newvalue": "sdci"
+                            },
+                            {
+                                "value": "281",
+                                "newvalue": "xboxWireless"
+                            },
+                            {
+                                "value": "282",
+                                "newvalue": "fastdsl"
+                            },
+                            {
+                                "value": "283",
+                                "newvalue": "docsCableScte55d1FwdOob"
+                            },
+                            {
+                                "value": "284",
+                                "newvalue": "docsCableScte55d1RetOob"
+                            },
+                            {
+                                "value": "285",
+                                "newvalue": "docsCableScte55d2DsOob"
+                            },
+                            {
+                                "value": "286",
+                                "newvalue": "docsCableScte55d2UsOob"
+                            },
+                            {
+                                "value": "287",
+                                "newvalue": "docsCableNdf"
+                            },
+                            {
+                                "value": "288",
+                                "newvalue": "docsCableNdr"
+                            },
+                            {
+                                "value": "289",
+                                "newvalue": "ptm"
+                            },
+                            {
+                                "value": "290",
+                                "newvalue": "ghn"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}
