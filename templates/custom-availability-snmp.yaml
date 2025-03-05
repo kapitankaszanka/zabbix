@@ -1,0 +1,70 @@
+zabbix_export:
+  version: '7.2'
+  template_groups:
+    - uuid: 8644e511707949f49016315b1ccb8ddd
+      name: custom
+    - uuid: e71cdea4924d4913993462664c19becb
+      name: snmp
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: c70148c2b8bd4520a735821da4083223
+      template: custom.availability.snmp
+      name: custom.availability.snmp
+      groups:
+        - name: custom
+        - name: snmp
+        - name: Templates
+      items:
+        - uuid: cabee1cfdf454ce4b1ff2d73ef3b3992
+          name: 'snmp agent availability'
+          type: INTERNAL
+          key: 'zabbix[host,snmp,available]'
+          delay: '{$SNMP.INTERVAL}'
+          history: 14d
+          trends: 90d
+          description: |
+            Availability of SNMP checks on the host. The value of this item corresponds to availability icons in the host list.
+            Possible values:
+            0 - not available
+            1 - available
+            2 - unknown
+          valuemap:
+            name: zabbix.host.available
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 5m
+          tags:
+            - tag: component
+              value: health
+            - tag: component
+              value: network
+          triggers:
+            - uuid: 8910b3338ed84e929a3099f5431a7954
+              expression: 'max(/custom.availability.snmp/zabbix[host,snmp,available],{$SNMP.TIMEOUT})=0'
+              name: 'no snmp data collection'
+              opdata: 'current state: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'SNMP is not available for polling. Please check device connectivity and SNMP settings.'
+              tags:
+                - tag: scope
+                  value: availability
+      tags:
+        - tag: class
+          value: health
+      macros:
+        - macro: '{$SNMP.INTERVAL}'
+          value: 1m
+        - macro: '{$SNMP.TIMEOUT}'
+          value: 5m
+      valuemaps:
+        - uuid: 50e4d1a2b2304e4ba6ca56dc43b8b412
+          name: zabbix.host.available
+          mappings:
+            - value: '0'
+              newvalue: 'not available'
+            - value: '1'
+              newvalue: available
+            - value: '2'
+              newvalue: unknown

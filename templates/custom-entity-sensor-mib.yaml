@@ -1,0 +1,209 @@
+zabbix_export:
+  version: '7.2'
+  template_groups:
+    - uuid: 8644e511707949f49016315b1ccb8ddd
+      name: custom
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: c6483b98bd4148a7879285e5eeec5441
+      template: custom.entity-sensor-mib
+      name: custom.entity-sensor-mib
+      groups:
+        - name: custom
+        - name: Templates
+      items:
+        - uuid: 298c45a75f824d0f8168d46ab804e417
+          name: 'walk discovery - entity sensors'
+          type: SNMP_AGENT
+          snmp_oid: 'walk[1.3.6.1.2.1.99.1.1.1.1,1.3.6.1.2.1.99.1.1.1.3,1.3.6.1.2.1.99.1.1.1.4,1.3.6.1.2.1.99.1.1.1.5,1.3.6.1.2.1.99.1.1.1.6]'
+          key: walk.discovery.entity.sensors
+          delay: 5m
+          history: '0'
+          value_type: TEXT
+          tags:
+            - tag: component
+              value: raw
+      discovery_rules:
+        - uuid: 361d34574d9a435e831f59784b4babbc
+          name: 'entity temp sensor discovery'
+          type: DEPENDENT
+          key: discovery.entity.sensors.fan
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#SENSOR.OPER.STATUS}'
+                value: ^1$
+              - macro: '{#SENSOR.PRECISION}'
+                value: ^0$
+              - macro: '{#SENSOR.TYPE}'
+                value: ^10$
+          lifetime: 1d
+          item_prototypes:
+            - uuid: e72d65b009a24b359fe4909705273783
+              name: '#{#SNMPINDEX} fan sensor status'
+              type: DEPENDENT
+              key: 'entity.sensor.[fan.status.{#SNMPINDEX}]'
+              valuemap:
+                name: ent-sensor-oper-status
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.99.1.1.1.5.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: walk.discovery.entity.sensors
+            - uuid: b95a0da39cde45819756868dcdd1ded1
+              name: '#{#SNMPINDEX} fan sensor value'
+              type: DEPENDENT
+              key: 'entity.sensor.[fan.value{#SNMPINDEX}]'
+              history: 7d
+              trends: 90d
+              units: '{#SENSOR.UNIT.DISPLAY}'
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.99.1.1.1.4.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: walk.discovery.entity.sensors
+          master_item:
+            key: walk.discovery.entity.sensors
+          preprocessing:
+            - type: SNMP_WALK_TO_JSON
+              parameters:
+                - '{#SENSOR.TYPE}'
+                - 1.3.6.1.2.1.99.1.1.1.1
+                - '0'
+                - '{#SENSOR.PRECISION}'
+                - 1.3.6.1.2.1.99.1.1.1.3
+                - '0'
+                - '{#SENSOR.OPER.STATUS}'
+                - 1.3.6.1.2.1.99.1.1.1.5
+                - '0'
+                - '{#SENSOR.UNIT.DISPLAY}'
+                - 1.3.6.1.2.1.99.1.1.1.6
+                - '0'
+              error_handler: DISCARD_VALUE
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+        - uuid: 1283e89c65974ebe9c3b78bc93d8f569
+          name: 'entity temp sensor discovery'
+          type: DEPENDENT
+          key: discovery.entity.sensors.temp
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#SENSOR.OPER.STATUS}'
+                value: ^1$
+              - macro: '{#SENSOR.TYPE}'
+                value: ^8$
+          lifetime: 1d
+          item_prototypes:
+            - uuid: bee77ce65128439795f8b21dbf6dbe2b
+              name: 'temp sensor status'
+              type: DEPENDENT
+              key: 'entity.sensor.[temp.status.{#SNMPINDEX}]'
+              history: 7d
+              trends: 90d
+              description: |
+                ENTITY-SENSOR-MIB RFC 3433
+                This object identifies the current operational status of the sensor (as it's known to the agent.
+              valuemap:
+                name: ent-sensor-oper-status
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.99.1.1.1.5.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: walk.discovery.entity.sensors
+              tags:
+                - tag: component
+                  value: sensor
+            - uuid: c97ca4207f634c238f8dd743e259a4a0
+              name: 'temp sensor value'
+              type: DEPENDENT
+              key: 'entity.sensor.[temp.value.{#SNMPINDEX}]'
+              history: 7d
+              trends: 90d
+              units: '{#SENSOR.UNIT.DISPLAY}'
+              description: |
+                ENTITY-SENSOR-MIB RFC 3433
+                The most recent measurement obtained by the agent for this sensor. To correctly interpret the value of this object, the associated entPhySensorType, entPhySensorScale, and entPhySensorPrecision objects must also be examined.
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.99.1.1.1.4.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: walk.discovery.entity.sensors
+              tags:
+                - tag: component
+                  value: sensor
+          master_item:
+            key: walk.discovery.entity.sensors
+          preprocessing:
+            - type: SNMP_WALK_TO_JSON
+              parameters:
+                - '{#SENSOR.TYPE}'
+                - 1.3.6.1.2.1.99.1.1.1.1
+                - '0'
+                - '{#SENSOR.PRECISION}'
+                - 1.3.6.1.2.1.99.1.1.1.3
+                - '0'
+                - '{#SENSOR.OPER.STATUS}'
+                - 1.3.6.1.2.1.99.1.1.1.5
+                - '0'
+                - '{#SENSOR.UNIT.DISPLAY}'
+                - 1.3.6.1.2.1.99.1.1.1.6
+                - '0'
+              error_handler: DISCARD_VALUE
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+      tags:
+        - tag: class
+          value: network
+        - tag: class
+          value: sensor
+      valuemaps:
+        - uuid: 007aef836be2403a9586ce8490686371
+          name: ent-sensor-oper-status
+          mappings:
+            - value: '0'
+              newvalue: down
+            - value: '1'
+              newvalue: up
+        - uuid: 2c668c8e86784731945538199ad8ba06
+          name: entity-sensor-mib
+          mappings:
+            - value: '1'
+              newvalue: other
+            - value: '2'
+              newvalue: unknown
+            - value: '3'
+              newvalue: voltsAC
+            - value: '4'
+              newvalue: voltsDC
+            - value: '5'
+              newvalue: amperes
+            - value: '6'
+              newvalue: watts
+            - value: '7'
+              newvalue: hertz
+            - value: '8'
+              newvalue: celsius
+            - value: '9'
+              newvalue: percentRH
+            - value: '10'
+              newvalue: rpm
+            - value: '11'
+              newvalue: cmm
+            - value: '12'
+              newvalue: truthvalue

@@ -1,0 +1,352 @@
+zabbix_export:
+  version: '7.2'
+  template_groups:
+    - uuid: 8644e511707949f49016315b1ccb8ddd
+      name: custom
+  templates:
+    - uuid: c1fabe9aecb446e78b5458534ad977e7
+      template: custom.host-resources-mib
+      name: custom.host-resources-mib
+      groups:
+        - name: custom
+      items:
+        - uuid: 5f572ab32010424ebe1e236b16f1cfb4
+          name: 'uptime (hardware)'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.25.1.1.0]'
+          key: 'system.hw.uptime[hrSystemUptime.0]'
+          delay: 30s
+          trends: '0'
+          units: uptime
+          description: |
+            MIB: HOST-RESOURCES-MIB
+            The amount of time since this host was last initialized. Note that this is different from sysUpTime in the SNMPv2-MIB [RFC1907] because sysUpTime is the uptime of the network management portion of the system.
+          preprocessing:
+            - type: CHECK_NOT_SUPPORTED
+              parameters:
+                - '-1'
+              error_handler: CUSTOM_VALUE
+              error_handler_params: '0'
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+            - type: DISCARD_UNCHANGED
+          tags:
+            - tag: component
+              value: system
+        - uuid: fed982b732574b108dd9af6b89269460
+          name: 'total memory'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.25.2.3.1.5.65536]'
+          key: 'system.memory.total[hrStorageSize.Memory]'
+          delay: 3m
+          history: 7d
+          trends: 90d
+          units: B
+          description: |
+            MIB: HOST-RESOURCES-MIB
+            The size of the storage represented by this entry, in
+            units of hrStorageAllocationUnits. This object is
+            writable to allow remote configuration of the size of
+            the storage area in those cases where such an
+            operation makes sense and is possible on the
+            underlying system. For example, the amount of main
+            memory allocated to a buffer pool might be modified or
+            the amount of disk space allocated to virtual memory
+            might be modified.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1024'
+            - type: DISCARD_UNCHANGED
+          tags:
+            - tag: component
+              value: memory
+        - uuid: d1b8697bc2634f29bfbe21f736b27e15
+          name: 'used memory'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.25.2.3.1.6.65536]'
+          key: 'system.memory.used[hrStorageUsed.Memory]'
+          delay: 3m
+          history: 7d
+          trends: 90d
+          units: B
+          description: |
+            MIB: HOST-RESOURCES-MIB
+            The amount of the storage represented by this entry that is allocated, in units of hrStorageAllocationUnits.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1024'
+            - type: DISCARD_UNCHANGED
+          tags:
+            - tag: component
+              value: memory
+        - uuid: 019ed0a15cfb489fbc5d34b93dcaab59
+          name: 'memory utilization'
+          type: CALCULATED
+          key: 'system.memory.util[memoryUsedPercentage.Memory]'
+          delay: 3m
+          value_type: FLOAT
+          units: '%'
+          params: 'last(//system.memory.used[hrStorageUsed.Memory])/last(//system.memory.total[hrStorageSize.Memory])*100'
+          description: 'Memory utilization in %.'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 5m
+          tags:
+            - tag: component
+              value: memory
+          triggers:
+            - uuid: 38807965f38a43399cd407dfad0bb2c1
+              expression: 'min(/custom.host-resources-mib/system.memory.util[memoryUsedPercentage.Memory],5m)>{$MEMORY.UTIL.MAX}'
+              name: 'high memory utilization'
+              event_name: 'high memory utilization (>{$MEMORY.UTIL.MAX}% for 5m)'
+              priority: AVERAGE
+              description: 'The system is running out of free memory.'
+              tags:
+                - tag: scope
+                  value: capacity
+                - tag: scope
+                  value: performance
+        - uuid: d709141f6d54470e92468ef7dee98a71
+          name: 'walk discovery - cpus'
+          type: SNMP_AGENT
+          snmp_oid: 'walk[1.3.6.1.2.1.25.3.3.1.1,1.3.6.1.2.1.25.3.3.1.2]'
+          key: walk.discovery.system.cpu
+          delay: 3m
+          history: '0'
+          value_type: TEXT
+          description: |
+            MIB: HOST-RESOURCES-MIB
+            Discovering system CPUs.
+          tags:
+            - tag: component
+              value: raw
+        - uuid: c03ba4950c08439495ec37439b00f5dd
+          name: 'walk discovery - filesystems'
+          type: SNMP_AGENT
+          snmp_oid: 'walk[1.3.6.1.2.1.25.2.3.1.3,1.3.6.1.2.1.25.2.3.1.4,1.3.6.1.2.1.25.2.3.1.2,1.3.6.1.2.1.25.2.3.1.6,1.3.6.1.2.1.25.2.3.1.5]'
+          key: walk.discovery.vfs.fs
+          delay: 5m
+          history: '0'
+          value_type: TEXT
+          description: |
+            MIB: HOST-RESOURCES-MIB
+            Discovering mounted filesystems.
+          tags:
+            - tag: component
+              value: raw
+      discovery_rules:
+        - uuid: 0c579c08ac3546d2ba27db68c48f7058
+          name: 'cpu discovery'
+          type: DEPENDENT
+          key: discovery.system.cpu
+          description: 'HOST-RESOURCES-MIB::hrProcessorTable discovery.'
+          item_prototypes:
+            - uuid: b10a82c18eb84a07b01ed89c8e321d27
+              name: '#{#SNMPINDEX}: cpu utilization'
+              type: DEPENDENT
+              key: 'system.cpu.util[hrProcessorLoad.{#SNMPINDEX}]'
+              value_type: FLOAT
+              units: '%'
+              description: |
+                MIB: HOST-RESOURCES-MIB
+                The average, over the last minute, of the percentage of time that this processor was not idle. Implementations may approximate this one minute smoothing period if necessary.
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.25.3.3.1.2.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              master_item:
+                key: walk.discovery.system.cpu
+              tags:
+                - tag: component
+                  value: cpu
+              trigger_prototypes:
+                - uuid: 594892ba33a545b9afee1e04e96190f7
+                  expression: 'min(/custom.host-resources-mib/system.cpu.util[hrProcessorLoad.{#SNMPINDEX}],5m)>{$CPU.UTIL.CRIT}'
+                  name: '#{#SNMPINDEX}: high cpu utilization'
+                  event_name: '#{#SNMPINDEX}: high cpu utilization (over {$CPU.UTIL.CRIT}% for 5m)'
+                  opdata: 'Current utilization: {ITEM.LASTVALUE1}'
+                  priority: WARNING
+                  description: 'CPU utilization is too high. The system might be slow to respond.'
+                  tags:
+                    - tag: scope
+                      value: performance
+          master_item:
+            key: walk.discovery.system.cpu
+          preprocessing:
+            - type: SNMP_WALK_TO_JSON
+              parameters:
+                - '{#SNMPVALUE}'
+                - 1.3.6.1.2.1.25.3.3.1.1
+                - '0'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+        - uuid: 26ba46186c634b5488cebb5bb231cc52
+          name: 'storage discovery'
+          type: DEPENDENT
+          key: discovery.vfs.fs
+          filter:
+            evaltype: OR
+            conditions:
+              - macro: '{#STORAGE.TYPE}'
+                value: .+4$
+              - macro: '{#STORAGE.TYPE}'
+                value: .+hrStorageFixedDisk
+          description: 'HOST-RESOURCES-MIB::hrStorage discovery with storage filter.'
+          item_prototypes:
+            - uuid: 51d6ed0512d84ec5a73c390fcaa195b5
+              name: 'disk-{#SNMPINDEX}: space utilization'
+              type: CALCULATED
+              key: 'vfs.fs.pused[hrStorageSize.{#SNMPINDEX}]'
+              history: 7d
+              value_type: FLOAT
+              trends: 90d
+              units: '%'
+              params: '(last(//vfs.fs.used[hrStorageSize.{#SNMPINDEX}])/last(//vfs.fs.total[hrStorageSize.{#SNMPINDEX}]))*100'
+              description: 'The space utilization expressed in % for Disk-{#SNMPINDEX}.'
+              tags:
+                - tag: component
+                  value: storage
+                - tag: filesystem
+                  value: '{#FS.NAME}'
+            - uuid: f8a18e545aa24d7b96ed2603f9d745f0
+              name: 'disk-{#SNMPINDEX}: total space'
+              type: DEPENDENT
+              key: 'vfs.fs.total[hrStorageSize.{#SNMPINDEX}]'
+              history: 7d
+              trends: 90d
+              units: B
+              description: |
+                MIB: HOST-RESOURCES-MIB
+                The size of the storage represented by this entry, in
+                units of hrStorageAllocationUnits. This object is
+                writable to allow remote configuration of the size of
+                the storage area in those cases where such an
+                operation makes sense and is possible on the
+                underlying system. For example, the amount of main
+                memory allocated to a buffer pool might be modified or
+                the amount of disk space allocated to virtual memory
+                might be modified.
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.25.2.3.1.5.{#SNMPINDEX}'
+                    - '0'
+                - type: MULTIPLIER
+                  parameters:
+                    - '1024'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: walk.discovery.vfs.fs
+              tags:
+                - tag: component
+                  value: storage
+                - tag: filesystem
+                  value: '{#FS.NAME}'
+            - uuid: b7dcb0696fb84508a3605f45ad8d0729
+              name: 'disk-{#SNMPINDEX}: used space'
+              type: DEPENDENT
+              key: 'vfs.fs.used[hrStorageSize.{#SNMPINDEX}]'
+              history: 7d
+              trends: 90d
+              units: B
+              description: |
+                MIB: HOST-RESOURCES-MIB
+                The amount of the storage represented by this entry that is allocated, in units of hrStorageAllocationUnits.
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.25.2.3.1.6.{#SNMPINDEX}'
+                    - '0'
+                - type: MULTIPLIER
+                  parameters:
+                    - '1024'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: walk.discovery.vfs.fs
+              tags:
+                - tag: component
+                  value: storage
+                - tag: filesystem
+                  value: '{#FS.NAME}'
+          trigger_prototypes:
+            - uuid: 78d001a14711453d933d45a15abb06a1
+              expression: |
+                last(/custom.host-resources-mib/vfs.fs.pused[hrStorageSize.{#SNMPINDEX}])>{$VFS.FS.PUSED.MAX.CRIT:"Disk-{#SNMPINDEX}"} and
+                ((last(/custom.host-resources-mib/vfs.fs.total[hrStorageSize.{#SNMPINDEX}])-last(/custom.host-resources-mib/vfs.fs.used[hrStorageSize.{#SNMPINDEX}]))<{$VFS.FS.FREE.MIN.CRIT:"Disk-{#SNMPINDEX}"} or timeleft(/custom.host-resources-mib/vfs.fs.pused[hrStorageSize.{#SNMPINDEX}],1h,100)<1d)
+              name: 'disk-{#SNMPINDEX}: disk space is critically low'
+              event_name: 'disk-{#SNMPINDEX}: disk space is critically low (used > {$VFS.FS.PUSED.MAX.CRIT:"Disk-{#SNMPINDEX}"}%)'
+              opdata: 'dpace used: {ITEM.LASTVALUE3} of {ITEM.LASTVALUE2} ({ITEM.LASTVALUE1})'
+              priority: AVERAGE
+              description: |
+                Two conditions should match: First, space utilization should be above {$VFS.FS.PUSED.MAX.CRIT:"Disk-{#SNMPINDEX}"}.
+                 Second condition should be one of the following:
+                 - The disk free space is less than {$VFS.FS.FREE.MIN.CRIT:"Disk-{#SNMPINDEX}"}.
+                 - The disk will be full in less than 24 hours.
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: availability
+                - tag: scope
+                  value: capacity
+            - uuid: d3491a2a6c814bacb886fa1948b9e638
+              expression: |
+                last(/custom.host-resources-mib/vfs.fs.pused[hrStorageSize.{#SNMPINDEX}])>{$VFS.FS.PUSED.MAX.WARN:"Disk-{#SNMPINDEX}"} and
+                ((last(/custom.host-resources-mib/vfs.fs.total[hrStorageSize.{#SNMPINDEX}])-last(/custom.host-resources-mib/vfs.fs.used[hrStorageSize.{#SNMPINDEX}]))<{$VFS.FS.FREE.MIN.WARN:"Disk-{#SNMPINDEX}"} or timeleft(/custom.host-resources-mib/vfs.fs.pused[hrStorageSize.{#SNMPINDEX}],1h,100)<1d)
+              name: 'disk-{#SNMPINDEX}: disk space is low'
+              event_name: 'disk-{#SNMPINDEX}: disk space is low (used > {$VFS.FS.PUSED.MAX.WARN:"Disk-{#SNMPINDEX}"}%)'
+              opdata: 'space used: {ITEM.LASTVALUE3} of {ITEM.LASTVALUE2} ({ITEM.LASTVALUE1})'
+              priority: WARNING
+              description: |
+                Two conditions should match: First, space utilization should be above {$VFS.FS.PUSED.MAX.WARN:"Disk-{#SNMPINDEX}"}.
+                 Second condition should be one of the following:
+                 - The disk free space is less than {$VFS.FS.FREE.MIN.WARN:"Disk-{#SNMPINDEX}"}.
+                 - The disk will be full in less than 24 hours.
+              manual_close: 'YES'
+              dependencies:
+                - name: 'disk-{#SNMPINDEX}: disk space is critically low'
+                  expression: |
+                    last(/custom.host-resources-mib/vfs.fs.pused[hrStorageSize.{#SNMPINDEX}])>{$VFS.FS.PUSED.MAX.CRIT:"Disk-{#SNMPINDEX}"} and
+                    ((last(/custom.host-resources-mib/vfs.fs.total[hrStorageSize.{#SNMPINDEX}])-last(/custom.host-resources-mib/vfs.fs.used[hrStorageSize.{#SNMPINDEX}]))<{$VFS.FS.FREE.MIN.CRIT:"Disk-{#SNMPINDEX}"} or timeleft(/custom.host-resources-mib/vfs.fs.pused[hrStorageSize.{#SNMPINDEX}],1h,100)<1d)
+              tags:
+                - tag: scope
+                  value: availability
+                - tag: scope
+                  value: capacity
+          master_item:
+            key: walk.discovery.vfs.fs
+          preprocessing:
+            - type: SNMP_WALK_TO_JSON
+              parameters:
+                - '{#FS.NAME}'
+                - 1.3.6.1.2.1.25.2.3.1.3
+                - '0'
+                - '{#ALLOC.UNITS}'
+                - 1.3.6.1.2.1.25.2.3.1.4
+                - '0'
+                - '{#STORAGE.TYPE}'
+                - 1.3.6.1.2.1.25.2.3.1.2
+                - '0'
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+      tags:
+        - tag: class
+          value: network
+      macros:
+        - macro: '{$CPU.UTIL.CRIT}'
+          value: '90'
+        - macro: '{$MEMORY.UTIL.MAX}'
+          value: '90'
+        - macro: '{$VFS.FS.PUSED.MAX.CRIT}'
+          value: '90'
+        - macro: '{$VFS.FS.PUSED.MAX.WARN}'
+          value: '80'

@@ -1,0 +1,23 @@
+zabbix_export:
+  version: '7.2'
+  template_groups:
+    - uuid: 53c174a2e33b453fb027a1e359895a48
+      name: availability
+    - uuid: 8644e511707949f49016315b1ccb8ddd
+      name: custom
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: 58786d1e2106440eb0caa00d06fe6ec8
+      template: custom.availability.basic
+      name: custom.availability.basic
+      templates:
+        - name: custom.availability.icmp
+        - name: custom.availability.snmp
+      groups:
+        - name: availability
+        - name: custom
+        - name: Templates
+      tags:
+        - tag: class
+          value: health

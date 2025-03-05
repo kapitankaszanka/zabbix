@@ -1,0 +1,26 @@
+zabbix_export:
+  version: '7.2'
+  template_groups:
+    - uuid: 8644e511707949f49016315b1ccb8ddd
+      name: custom
+    - uuid: 36bff6c29af64692839d077febfc7079
+      name: 'Templates/Network devices'
+  templates:
+    - uuid: 3c6f2e88a79c4336ae79992c3d524e04
+      template: custom.mikrotik-basic
+      name: custom.mikrotik-basic
+      description: |
+        Custom mikrotik template contains:
+        if-mib
+      templates:
+        - name: custom.availability.basic
+        - name: custom.host-resources-mib
+        - name: custom.if-mib
+        - name: custom.mikrotik-mib
+        - name: custom.snmpv2-mib
+      groups:
+        - name: custom
+        - name: 'Templates/Network devices'
+      tags:
+        - tag: target
+          value: mikrotik
