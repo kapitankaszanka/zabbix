@@ -77,7 +77,7 @@ zabbix_export:
               parameters:
                 - $..Error.first()
           timeout: '{$API.TIMEOUT}'
-          url: 'https://{$API.ADDRESS}:{$API.PORT}/rest/queue/simple?.proplist=.id,max-limit,target,name'
+          url: 'https://{$API.URL}:{$API.PORT}/rest/queue/simple?.proplist=.id,max-limit,target,name'
           verify_host: 'YES'
           tags:
             - tag: component
@@ -160,7 +160,7 @@ zabbix_export:
             - lld_macro: '{#QUEUE.TARGET}'
               path: $.target
       macros:
-        - macro: '{$API.ADDRESS}'
+        - macro: '{$API.URL}'
         - macro: '{$API.PASSWORD}'
           type: SECRET_TEXT
         - macro: '{$API.PORT}'
