@@ -1,2 +1,1 @@
 # zabbix
-zabbix staff
