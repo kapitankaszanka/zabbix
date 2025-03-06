@@ -26,7 +26,7 @@ zabbix_export:
                 var credentials = params.user + ':' + params.password;
                 var encodedCredentials = btoa(credentials);
                 req.addHeader('Authorization: Basic ' + encodedCredentials);
-                req.get(encodeURI('https://' + params.url + ':' + params.port + '/api2/json/version'));
+                req.get(encodeURI('https://' + params.url + ':' + params.port + '/rest/system/identity'));
             } catch (error) {
                 Zabbix.log(3, "Proxmox API failed: " + params.url + " Error: " + error);
                 if (!Number.isInteger(error))
