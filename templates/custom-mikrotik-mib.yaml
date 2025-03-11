@@ -1,18 +1,18 @@
 zabbix_export:
   version: '7.2'
   template_groups:
-    - uuid: 8644e511707949f49016315b1ccb8ddd
-      name: custom
-    - uuid: 36bff6c29af64692839d077febfc7079
-      name: 'Templates/Network devices'
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+    - uuid: b8e424c574984774a6fb1eb4eb4f99a3
+      name: Templates/Custom
   templates:
     - uuid: 10a5de1d096f4315913cfcde800d99aa
       template: custom.mikrotik-mib
       name: custom.mikrotik-mib
       description: MIKROTIK-MIB
       groups:
-        - name: custom
-        - name: 'Templates/Network devices'
+        - name: Templates
+        - name: Templates/Custom
       items:
         - uuid: e7c4fd380a2142d6b73537724f3bc15b
           name: 'current firmware version'
@@ -135,7 +135,7 @@ zabbix_export:
         - uuid: 1734d227d7d94e8683677e4ed040e019
           name: 'walk discovery - lte modem'
           type: SNMP_AGENT
-          snmp_oid: 'walk[1.3.6.1.4.1.14988.1.1.14.1.1.2,1.3.6.1.2.1.31.1.1.1.18,1.3.6.1.2.1.2.2.1.3]'
+          snmp_oid: 'walk[1.3.6.1.2.1.2.2.1.3,1.3.6.1.2.1.2.2.1.7,1.3.6.1.2.1.2.2.1.8,1.3.6.1.2.1.31.1.1.1.18,1.3.6.1.4.1.14988.1.1.14.1.1.2,1.3.6.1.4.1.14988.1.1.16.1.1.2,1.3.6.1.4.1.14988.1.1.16.1.1.3,1.3.6.1.4.1.14988.1.1.16.1.1.4,1.3.6.1.4.1.14988.1.1.16.1.1.7]'
           key: mt.walk.discovery.net.if.lte
           delay: 1h
           history: '0'
@@ -195,7 +195,6 @@ zabbix_export:
                   parameters:
                     - '1.3.6.1.4.1.14988.1.1.3.11.{#SNMPINDEX}'
                     - '0'
-                  error_handler: DISCARD_VALUE
                 - type: MULTIPLIER
                   parameters:
                     - '0.1'
@@ -264,15 +263,11 @@ zabbix_export:
               description: |
                 MIB: MIKROTIK-MIB
                 mtxrHlTemperature Device temperature in Celsius (degrees C).
-                Might be missing in entry models (RB750, RB450G..).
-                
-                Reference: http://wiki.mikrotik.com/wiki/Manual:SNMP
               preprocessing:
                 - type: SNMP_WALK_VALUE
                   parameters:
                     - '1.3.6.1.4.1.14988.1.1.3.10.{#SNMPINDEX}'
                     - '0'
-                  error_handler: DISCARD_VALUE
                 - type: MULTIPLIER
                   parameters:
                     - '0.1'
@@ -356,10 +351,8 @@ zabbix_export:
           item_prototypes:
             - uuid: 12ce37eeaf2241bea5d2ceed2e80df72
               name: 'int {#IF.NAME} ({#IF.ALIAS}): lte modem rsrp'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.16.1.1.4.{#SNMPINDEX}]'
+              type: DEPENDENT
               key: 'mt.lte.modem.rsrp[mtxrLTEModemSignalRSRP.{#SNMPINDEX}]'
-              delay: 5m
               history: 7d
               value_type: FLOAT
               trends: 60d
@@ -368,9 +361,13 @@ zabbix_export:
                 MIB: MIKROTIK-MIB
                 mtxrLTEModemSignalRSRP Reference Signal Received Power.
               preprocessing:
-                - type: DISCARD_UNCHANGED_HEARTBEAT
+                - type: SNMP_WALK_VALUE
                   parameters:
-                    - 1h
+                    - '1.3.6.1.4.1.14988.1.1.16.1.1.4.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: mt.walk.discovery.net.if.lte
               tags:
                 - tag: component
                   value: interface
@@ -393,10 +390,8 @@ zabbix_export:
                       value: performance
             - uuid: ce8a5bf5acb64108ac77c31b0df73e41
               name: 'int {#IF.NAME} ({#IF.ALIAS}): lte modem rsrq'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.16.1.1.3.{#SNMPINDEX}]'
+              type: DEPENDENT
               key: 'mt.lte.modem.rsrq[mtxrLTEModemSignalRSRQ.{#SNMPINDEX}]'
-              delay: 5m
               history: 7d
               value_type: FLOAT
               trends: 60d
@@ -405,9 +400,13 @@ zabbix_export:
                 MIB: MIKROTIK-MIB
                 mtxrLTEModemSignalRSRQ Reference Signal Received Quality.
               preprocessing:
-                - type: DISCARD_UNCHANGED_HEARTBEAT
+                - type: SNMP_WALK_VALUE
                   parameters:
-                    - 1h
+                    - '1.3.6.1.4.1.14988.1.1.16.1.1.3.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: mt.walk.discovery.net.if.lte
               tags:
                 - tag: component
                   value: interface
@@ -430,10 +429,8 @@ zabbix_export:
                       value: performance
             - uuid: c6f280e3fa104245b361b2c225780ea8
               name: 'int {#IF.NAME} ({#IF.ALIAS}): lte modem rssi'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.16.1.1.2.{#SNMPINDEX}]'
+              type: DEPENDENT
               key: 'mt.lte.modem.rssi[mtxrLTEModemSignalRSSI.{#SNMPINDEX}]'
-              delay: 5m
               history: 7d
               value_type: FLOAT
               trends: 60d
@@ -442,9 +439,13 @@ zabbix_export:
                 MIB: MIKROTIK-MIB
                 mtxrLTEModemSignalRSSI Received Signal Strength Indicator.
               preprocessing:
-                - type: DISCARD_UNCHANGED_HEARTBEAT
+                - type: SNMP_WALK_VALUE
                   parameters:
-                    - 1h
+                    - '1.3.6.1.4.1.14988.1.1.16.1.1.2.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: mt.walk.discovery.net.if.lte
               tags:
                 - tag: component
                   value: interface
@@ -467,10 +468,8 @@ zabbix_export:
                       value: performance
             - uuid: 5cf130f61f3d4d3ebdfb0473f9e0b884
               name: 'int {#IF.NAME} ({#IF.ALIAS}): lte modem sinr'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.16.1.1.7.{#SNMPINDEX}]'
+              type: DEPENDENT
               key: 'mt.lte.modem.sinr[mtxrLTEModemSignalSINR.{#SNMPINDEX}]'
-              delay: 5m
               history: 7d
               value_type: FLOAT
               trends: 60d
@@ -478,6 +477,14 @@ zabbix_export:
               description: |
                 MIB: MIKROTIK-MIB
                 mtxrLTEModemSignalSINR Signal to Interference & Noise Ratio.
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.4.1.14988.1.1.16.1.1.7.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: mt.walk.discovery.net.if.lte
               tags:
                 - tag: component
                   value: interface
@@ -864,6 +871,10 @@ zabbix_export:
         - macro: '{$NET.IF.IF.ADMIN.STATUS.MATCHES}'
           value: '^.*'
         - macro: '{$NET.IF.IF.ADMIN.STATUS.NOT.MATCHES}'
+          value: ^2$
+        - macro: '{$NET.IF.IF.OPER.STATUS.MATCHES}'
+          value: '^.*'
+        - macro: '{$NET.IF.IF.OPER.STATUS.NOT.MATCHES}'
           value: ^2$
         - macro: '{$TEMP.CRIT}'
           value: '60'

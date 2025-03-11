@@ -1,22 +1,41 @@
 zabbix_export:
   version: '7.2'
   template_groups:
-    - uuid: 8644e511707949f49016315b1ccb8ddd
-      name: custom
     - uuid: 7df96b18c230490a9a0a9e2307226338
       name: Templates
+    - uuid: b8e424c574984774a6fb1eb4eb4f99a3
+      name: Templates/Custom
   templates:
+    - uuid: 58786d1e2106440eb0caa00d06fe6ec8
+      template: custom.availability.basic
+      name: custom.availability.basic
+      description: |
+        Basic verification of network device operation.
+        Dependencies:
+        custom.availability.icmp
+        custom.availability.snmp
+      templates:
+        - name: custom.availability.icmp
+        - name: custom.availability.snmp
+      groups:
+        - name: Templates
+        - name: Templates/Custom
+      tags:
+        - tag: class
+          value: health
     - uuid: f95d440e71fd40498fdbf63452d40d68
       template: custom.mikrotik-api
       name: custom.mikrotik-api
+      description: 'Zabbix connects to the device using rest-api and retrieves all configured queues.'
       groups:
-        - name: custom
         - name: Templates
+        - name: Templates/Custom
       items:
         - uuid: 2ccfcb66a41348a9ab486531258bea59
           name: 'rest-api - service available'
           type: SCRIPT
           key: mt.restapi.available
+          delay: 5m
           history: 1d
           trends: 180d
           params: |
@@ -67,7 +86,8 @@ zabbix_export:
           name: 'rest-api - get queue simple'
           type: HTTP_AGENT
           key: mt.restapi.queue-simple.get
-          history: 1d
+          delay: '{$UPDATE.INTERVAL}'
+          history: '0'
           value_type: TEXT
           authtype: BASIC
           username: '{$API.USER}'
@@ -103,7 +123,7 @@ zabbix_export:
                     - \1
                 - type: DISCARD_UNCHANGED_HEARTBEAT
                   parameters:
-                    - 1d
+                    - '{$UPDATE.INTERVAL}'
               master_item:
                 key: 'mt.restapi.queue.simple.[{#QUEUE.ID}]'
               tags:
@@ -125,7 +145,7 @@ zabbix_export:
                     - \1
                 - type: DISCARD_UNCHANGED_HEARTBEAT
                   parameters:
-                    - 1d
+                    - '{$UPDATE.INTERVAL}'
               master_item:
                 key: 'mt.restapi.queue.simple.[{#QUEUE.ID}]'
               tags:
@@ -160,15 +180,17 @@ zabbix_export:
             - lld_macro: '{#QUEUE.TARGET}'
               path: $.target
       macros:
-        - macro: '{$API.URL}'
         - macro: '{$API.PASSWORD}'
           type: SECRET_TEXT
         - macro: '{$API.PORT}'
           value: '443'
         - macro: '{$API.TIMEOUT}'
           value: 1m
+        - macro: '{$API.URL}'
         - macro: '{$API.USER}'
           type: SECRET_TEXT
+        - macro: '{$UPDATE.INTERVAL}'
+          value: 4h
       valuemaps:
         - uuid: 96cec98fe86343f9841c0a68a635dd0d
           name: 'http response Status code'
