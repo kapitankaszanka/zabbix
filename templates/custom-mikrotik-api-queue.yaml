@@ -1,41 +1,23 @@
 zabbix_export:
-  version: '7.2'
+  version: '7.0'
   template_groups:
+    - uuid: 8644e511707949f49016315b1ccb8ddd
+      name: custom
     - uuid: 7df96b18c230490a9a0a9e2307226338
       name: Templates
-    - uuid: b8e424c574984774a6fb1eb4eb4f99a3
-      name: Templates/Custom
   templates:
-    - uuid: 58786d1e2106440eb0caa00d06fe6ec8
-      template: custom.availability.basic
-      name: custom.availability.basic
-      description: |
-        Basic verification of network device operation.
-        Dependencies:
-        custom.availability.icmp
-        custom.availability.snmp
-      templates:
-        - name: custom.availability.icmp
-        - name: custom.availability.snmp
-      groups:
-        - name: Templates
-        - name: Templates/Custom
-      tags:
-        - tag: class
-          value: health
     - uuid: f95d440e71fd40498fdbf63452d40d68
       template: custom.mikrotik-api
       name: custom.mikrotik-api
-      description: 'Zabbix connects to the device using rest-api and retrieves all configured queues.'
       groups:
+        - name: custom
         - name: Templates
-        - name: Templates/Custom
       items:
         - uuid: 2ccfcb66a41348a9ab486531258bea59
           name: 'rest-api - service available'
           type: SCRIPT
           key: mt.restapi.available
-          delay: 5m
+          delay: 1h
           history: 1d
           trends: 180d
           params: |
@@ -86,9 +68,10 @@ zabbix_export:
           name: 'rest-api - get queue simple'
           type: HTTP_AGENT
           key: mt.restapi.queue-simple.get
-          delay: '{$UPDATE.INTERVAL}'
+          delay: '{$QUEUE.UPDATE_INTERVAL}'
           history: '0'
           value_type: TEXT
+          trends: '0'
           authtype: BASIC
           username: '{$API.USER}'
           password: '{$API.PASSWORD}'
@@ -97,7 +80,11 @@ zabbix_export:
               parameters:
                 - $..Error.first()
           timeout: '{$API.TIMEOUT}'
-          url: 'https://{$API.URL}:{$API.PORT}/rest/queue/simple?.proplist=.id,max-limit,target,name'
+          url: 'https://{$API.URL}:{$API.PORT}/rest/queue/simple'
+          query_fields:
+            - name: .proplist
+              value: '.id,max-limit,name,target,burst-limit'
+          verify_peer: 'YES'
           verify_host: 'YES'
           tags:
             - tag: component
@@ -107,69 +94,121 @@ zabbix_export:
           name: 'queue simple'
           type: DEPENDENT
           key: mt.restapi.queue.simple
+          delay: '0'
           lifetime: 1d
           item_prototypes:
-            - uuid: c7b1f655b35743d7a7e6d229fb9cbfe5
-              name: 'queue {#QUEUE.NAME} max limit download'
+            - uuid: 2ec77d5b615848149dd66aa225b5d8c2
+              name: 'queue {#QUEUE.TARGET} burst limit download'
               type: DEPENDENT
-              key: 'mt.restapi.queue.simple.[in.{#QUEUE.ID}]'
+              key: 'mt.restapi.queue.simple.[burst-limit.in.{#QUEUE.ID}]'
+              delay: '0'
               history: 1d
               trends: 180d
               units: bps
               preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#QUEUE.ID}'')][''burst-limit'']'
                 - type: REGEX
                   parameters:
                     - '\[\"(\d+)\/\d+\"\]'
                     - \1
                 - type: DISCARD_UNCHANGED_HEARTBEAT
                   parameters:
-                    - '{$UPDATE.INTERVAL}'
+                    - '{$QUEUE.UPDATE_INTERVAL}'
               master_item:
-                key: 'mt.restapi.queue.simple.[{#QUEUE.ID}]'
+                key: mt.restapi.queue-simple.get
               tags:
                 - tag: component
                   value: queue
                 - tag: queue
+                  value: '{#QUEUE.NAME}'
+                - tag: queue
                   value: '{#QUEUE.TARGET}'
-            - uuid: e646ee6d141149439ede7661f6ddf986
-              name: 'queue {#QUEUE.NAME} max limit upload'
+            - uuid: 586b0906f6be4858a94fe6a587b41a44
+              name: 'queue {#QUEUE.TARGET} burst limit upload'
               type: DEPENDENT
-              key: 'mt.restapi.queue.simple.[out.{#QUEUE.ID}]'
+              key: 'mt.restapi.queue.simple.[burst-limit.out.{#QUEUE.ID}]'
+              delay: '0'
               history: 1d
               trends: 180d
               units: bps
               preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#QUEUE.ID}'')][''burst-limit'']'
                 - type: REGEX
                   parameters:
                     - '\[\"\d+\/(\d+)\"\]'
                     - \1
                 - type: DISCARD_UNCHANGED_HEARTBEAT
                   parameters:
-                    - '{$UPDATE.INTERVAL}'
-              master_item:
-                key: 'mt.restapi.queue.simple.[{#QUEUE.ID}]'
-              tags:
-                - tag: component
-                  value: queue
-                - tag: queue
-                  value: '{#QUEUE.TARGET}'
-            - uuid: bb6bc5b084ae49bcb3cbf4bf8aac921d
-              name: 'queue {#QUEUE.NAME} max limit'
-              type: DEPENDENT
-              key: 'mt.restapi.queue.simple.[{#QUEUE.ID}]'
-              history: '0'
-              value_type: TEXT
-              preprocessing:
-                - type: JSONPATH
-                  parameters:
-                    - '$[?(@[''.id''] == ''{#QUEUE.ID}'')][''max-limit'']'
+                    - '{$QUEUE.UPDATE_INTERVAL}'
               master_item:
                 key: mt.restapi.queue-simple.get
               tags:
                 - tag: component
                   value: queue
+                - tag: queue
+                  value: '{#QUEUE.NAME}'
+                - tag: queue
+                  value: '{#QUEUE.TARGET}'
+            - uuid: c7b1f655b35743d7a7e6d229fb9cbfe5
+              name: 'queue {#QUEUE.TARGET} max limit download'
+              type: DEPENDENT
+              key: 'mt.restapi.queue.simple.[max-limit.in.{#QUEUE.ID}]'
+              delay: '0'
+              history: 1d
+              trends: 180d
+              units: bps
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#QUEUE.ID}'')][''max-limit'']'
+                - type: REGEX
+                  parameters:
+                    - '\[\"(\d+)\/\d+\"\]'
+                    - \1
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - '{$QUEUE.UPDATE_INTERVAL}'
+              master_item:
+                key: mt.restapi.queue-simple.get
+              tags:
                 - tag: component
-                  value: raw
+                  value: queue
+                - tag: queue
+                  value: '{#QUEUE.NAME}'
+                - tag: queue
+                  value: '{#QUEUE.TARGET}'
+            - uuid: e646ee6d141149439ede7661f6ddf986
+              name: 'queue {#QUEUE.TARGET} max limit upload'
+              type: DEPENDENT
+              key: 'mt.restapi.queue.simple.[max-limit.out.{#QUEUE.ID}]'
+              delay: '0'
+              history: 1d
+              trends: 180d
+              units: bps
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#QUEUE.ID}'')][''max-limit'']'
+                - type: REGEX
+                  parameters:
+                    - '\[\"\d+\/(\d+)\"\]'
+                    - \1
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - '{$QUEUE.UPDATE_INTERVAL}'
+              master_item:
+                key: mt.restapi.queue-simple.get
+              tags:
+                - tag: component
+                  value: queue
+                - tag: queue
+                  value: '{#QUEUE.NAME}'
+                - tag: queue
+                  value: '{#QUEUE.TARGET}'
           master_item:
             key: mt.restapi.queue-simple.get
           lld_macro_paths:
@@ -183,14 +222,16 @@ zabbix_export:
         - macro: '{$API.PASSWORD}'
           type: SECRET_TEXT
         - macro: '{$API.PORT}'
-          value: '443'
+          value: '4443'
         - macro: '{$API.TIMEOUT}'
           value: 1m
         - macro: '{$API.URL}'
+          description: 'Device url that server will connect to: r1.router.lizard.pl'
         - macro: '{$API.USER}'
           type: SECRET_TEXT
-        - macro: '{$UPDATE.INTERVAL}'
+        - macro: '{$QUEUE.UPDATE_INTERVAL}'
           value: 4h
+          description: 'Update interval is connected with discard harthbeat.'
       valuemaps:
         - uuid: 96cec98fe86343f9841c0a68a635dd0d
           name: 'http response Status code'
