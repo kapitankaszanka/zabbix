@@ -56,7 +56,7 @@ zabbix_export:
           lifetime: 1d
           item_prototypes:
             - uuid: 96a430cf329247978d54f92e1f268c94
-              name: 'dns {#RECORD.NAME} record class'
+              name: 'dns #{#RECORD.ID} {#RECORD.NAME} record class'
               type: DEPENDENT
               key: 'linux.agent.dns_checker.[class.{#RECORD.ID}]'
               history: 1d
@@ -74,7 +74,7 @@ zabbix_export:
                 - tag: service
                   value: dns
             - uuid: bc3bd5e47a5f496cb6bea1a469c01485
-              name: 'dns {#RECORD.NAME} record data'
+              name: 'dns #{#RECORD.ID} {#RECORD.NAME} record data'
               type: DEPENDENT
               key: 'linux.agent.dns_checker.[data.{#RECORD.ID}]'
               history: 1d
@@ -92,7 +92,7 @@ zabbix_export:
                 - tag: service
                   value: dns
             - uuid: 014c3e0d369942f584701636a8463334
-              name: 'dns {#RECORD.NAME} record ttl'
+              name: 'dns #{#RECORD.ID} {#RECORD.NAME} record ttl'
               type: DEPENDENT
               key: 'linux.agent.dns_checker.[ttl.{#RECORD.ID}]'
               history: 1d
@@ -110,7 +110,7 @@ zabbix_export:
                 - tag: service
                   value: dns
             - uuid: ab80543ed8e74d6f811ca54bd32c139e
-              name: 'dns {#RECORD.NAME} record type'
+              name: 'dns #{#RECORD.ID} {#RECORD.NAME} record type'
               type: DEPENDENT
               key: 'linux.agent.dns_checker.[type.{#RECORD.ID}]'
               history: 1d
