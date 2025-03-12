@@ -89,9 +89,12 @@ default_record_type="A"
 setup_arguments $1 $2 $3
 
 answer_output=$(dig $server_arg "$name" "$record_type" +noall +answer)
-query_time=$(dig $server_arg "$name" "$record_type" +noall +stats | grep "Query time:" | awk '{print $4}')
+query_stats=$(dig $server_arg "$name" "$record_type" +noall +stats)
+query_time=$(echo "$query_stats" | grep "Query time:" | awk '{print $4}')
+query_msg_size=$(echo "$query_stats" | grep "MSG SIZE" | awk '{print $5}')
+
 
 create_json_record
 
-json_output="{\"query_time\": \"${query_time}\", \"records\": [${records_json}]}"
+json_output="{\"query_time\": \"${query_time}\",\"query_msg_size\": \"${query_msg_size}\", \"records\": [${records_json}]}"
 echo "$json_output"

@@ -16,6 +16,27 @@ zabbix_export:
         - name: Templates
         - name: Templates/Custom
       items:
+        - uuid: 8e35c74c821d4b87addd61d8d7191209
+          name: 'dns check query res msg size'
+          type: DEPENDENT
+          key: linux.agent.dns_checker.query_res_msg_size
+          history: 1d
+          trends: 90d
+          units: B
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.query_msg_size
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          master_item:
+            key: 'system.run["/usr/local/bin/zabbix_script/dns_checker.sh {$DNS.SERVER} {$DOMAIN} {$RECORD.TYPE}"]'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: dns
         - uuid: 897af3a17b1b4336b5accd90b40af98b
           name: 'dns check query time'
           type: DEPENDENT
