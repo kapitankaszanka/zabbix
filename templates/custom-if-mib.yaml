@@ -17,11 +17,12 @@ zabbix_export:
         - uuid: 2ed6866f88314686a15c66931df393a8
           name: 'walk discovery - network interfaces'
           type: SNMP_AGENT
-          snmp_oid: 'walk[1.3.6.1.2.1.2.2.1.2,1.3.6.1.2.1.2.2.1.3,1.3.6.1.2.1.2.2.1.7,1.3.6.1.2.1.2.2.1.8,1.3.6.1.2.1.2.2.1.11,1.3.6.1.2.1.2.2.1.13,1.3.6.1.2.1.2.2.1.14,1.3.6.1.2.1.2.2.1.17,1.3.6.1.2.1.2.2.1.19,1.3.6.1.2.1.2.2.1.20,1.3.6.1.2.1.31.1.1.1.1,1.3.6.1.2.1.31.1.1.1.2,1.3.6.1.2.1.31.1.1.1.3,1.3.6.1.2.1.31.1.1.1.4,1.3.6.1.2.1.31.1.1.1.5,1.3.6.1.2.1.31.1.1.1.6,1.3.6.1.2.1.31.1.1.1.10,1.3.6.1.2.1.31.1.1.1.15,1.3.6.1.2.1.31.1.1.1.18]'
+          snmp_oid: 'walk[1.3.6.1.2.1.2.2.1.3,1.3.6.1.2.1.2.2.1.7,1.3.6.1.2.1.2.2.1.8,1.3.6.1.2.1.2.2.1.13,1.3.6.1.2.1.2.2.1.14,1.3.6.1.2.1.2.2.1.19,1.3.6.1.2.1.2.2.1.20,1.3.6.1.2.1.31.1.1.1.1,1.3.6.1.2.1.31.1.1.1.6,1.3.6.1.2.1.31.1.1.1.7,1.3.6.1.2.1.31.1.1.1.9,1.3.6.1.2.1.31.1.1.1.9,1.3.6.1.2.1.31.1.1.1.10,1.3.6.1.2.1.31.1.1.1.11,1.3.6.1.2.1.31.1.1.1.12,1.3.6.1.2.1.31.1.1.1.13,1.3.6.1.2.1.31.1.1.1.15,1.3.6.1.2.1.31.1.1.1.18]'
           key: walk.discovery.net.if
           delay: 3m
           history: '0'
           value_type: TEXT
+          trends: '0'
           timeout: '{$NET.IF.WALK.TIMEOUT}'
           tags:
             - tag: component
@@ -31,45 +32,52 @@ zabbix_export:
           name: 'network interfaces discovery'
           type: DEPENDENT
           key: discovery.entity.sensors
+          delay: '0'
           filter:
             evaltype: AND
             conditions:
               - macro: '{#IF.ADMIN.STATUS}'
                 value: '{$NET.IF.IF.ADMIN.STATUS.MATCHES}'
+                formulaid: A
               - macro: '{#IF.ADMIN.STATUS}'
                 value: '{$NET.IF.IF.ADMIN.STATUS.NOT.MATCHES}'
                 operator: NOT_MATCHES_REGEX
+                formulaid: B
               - macro: '{#IF.ALIAS}'
                 value: '{$NET.IF.IF.ALIAS.MATCHES}'
+                formulaid: C
               - macro: '{#IF.ALIAS}'
                 value: '{$NET.IF.IF.ALIAS.NOT.MATCHES}'
                 operator: NOT_MATCHES_REGEX
-              - macro: '{#IF.DESCR}'
-                value: '{$NET.IF.IF.DESCR.MATCHES}'
-              - macro: '{#IF.DESCR}'
-                value: '{$NET.IF.IF.DESCR.NOT.MATCHES}'
-                operator: NOT_MATCHES_REGEX
+                formulaid: D
               - macro: '{#IF.NAME}'
                 value: '{$NET.IF.IF.NAME.MATCHES}'
+                formulaid: E
               - macro: '{#IF.NAME}'
                 value: '{$NET.IF.IF.NAME.NOT.MATCHES}'
                 operator: NOT_MATCHES_REGEX
+                formulaid: F
               - macro: '{#IF.OPER.STATUS}'
                 value: '{$NET.IF.IF.OPER.STATUS.MATCHES}'
+                formulaid: G
               - macro: '{#IF.OPER.STATUS}'
                 value: '{$NET.IF.IF.OPER.STATUS.NOT.MATCHES}'
                 operator: NOT_MATCHES_REGEX
+                formulaid: H
               - macro: '{#IF.TYPE}'
                 value: '{$NET.IF.IF.TYPE.MATCHES}'
+                formulaid: I
               - macro: '{#IF.TYPE}'
                 value: '{$NET.IF.IF.TYPE.NOT.MATCHES}'
                 operator: NOT_MATCHES_REGEX
+                formulaid: J
           description: 'Discovering interfaces from IF-MIB.'
           item_prototypes:
             - uuid: 3ca0013ae8dc43a298e3d36c29db5c8b
               name: 'int {#IF.NAME} ({#IF.ALIAS}): in pkts broadcast'
               type: DEPENDENT
-              key: 'net.if.in.broadcast[ifInBroadcastPkts.{#SNMPINDEX}]'
+              key: 'net.if.in.[broadcast.pkts.{#SNMPINDEX}]'
+              delay: '0'
               history: 14d
               trends: 90d
               units: pps
@@ -79,36 +87,14 @@ zabbix_export:
               preprocessing:
                 - type: SNMP_WALK_VALUE
                   parameters:
-                    - '1.3.6.1.2.1.31.1.1.1.3.{#SNMPINDEX}'
+                    - '1.3.6.1.2.1.31.1.1.1.9.{#SNMPINDEX}'
                     - '0'
                 - type: CHANGE_PER_SECOND
-                - type: DISCARD_UNCHANGED
-              master_item:
-                key: walk.discovery.net.if
-              tags:
-                - tag: component
-                  value: interface
-                - tag: component
-                  value: network
-                - tag: interface
-                  value: '{#IF.NAME}'
-            - uuid: d49723461ed146a8a1d3755a07034398
-              name: 'int {#IF.NAME} ({#IF.ALIAS}): in pkts discarded'
-              type: DEPENDENT
-              key: 'net.if.in.discards[ifInDiscards.{#SNMPINDEX}]'
-              history: 14d
-              trends: 60d
-              units: pps
-              description: |
-                MIB: IF-MIB - RFC 2863
-                The number of inbound packets which were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol.  One possible reason for discarding such a packet could be to free up buffer space.  Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.
-              preprocessing:
-                - type: SNMP_WALK_VALUE
                   parameters:
-                    - '1.3.6.1.2.1.2.2.1.13.{#SNMPINDEX}'
-                    - '0'
-                - type: CHANGE_PER_SECOND
+                    - ''
                 - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
               master_item:
                 key: walk.discovery.net.if
               tags:
@@ -121,7 +107,8 @@ zabbix_export:
             - uuid: c18f8134983b4740a6c7a21ebfe2987a
               name: 'int {#IF.NAME} ({#IF.ALIAS}): in pkts with errors'
               type: DEPENDENT
-              key: 'net.if.in.errors[ifInErrors.{#SNMPINDEX}]'
+              key: 'net.if.in.[errors.pkts.{#SNMPINDEX}]'
+              delay: '0'
               history: 14d
               trends: 60d
               units: pps
@@ -134,7 +121,11 @@ zabbix_export:
                     - '1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}'
                     - '0'
                 - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
                 - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
               master_item:
                 key: walk.discovery.net.if
               tags:
@@ -147,7 +138,8 @@ zabbix_export:
             - uuid: 151480611f364d298f7250cb59e89841
               name: 'int {#IF.NAME} ({#IF.ALIAS}): in pkts multicast'
               type: DEPENDENT
-              key: 'net.if.in.multicast[ifInMulticastPkts.{#SNMPINDEX}]'
+              key: 'net.if.in.[multicast.pkts.{#SNMPINDEX}]'
+              delay: '0'
               history: 14d
               trends: 90d
               units: pps
@@ -157,36 +149,14 @@ zabbix_export:
               preprocessing:
                 - type: SNMP_WALK_VALUE
                   parameters:
-                    - '1.3.6.1.2.1.31.1.1.1.2.{#SNMPINDEX}'
+                    - '1.3.6.1.2.1.31.1.1.1.8.{#SNMPINDEX}'
                     - '0'
                 - type: CHANGE_PER_SECOND
-                - type: DISCARD_UNCHANGED
-              master_item:
-                key: walk.discovery.net.if
-              tags:
-                - tag: component
-                  value: interface
-                - tag: component
-                  value: network
-                - tag: interface
-                  value: '{#IF.NAME}'
-            - uuid: feececa3f2f04ce2b7a3e437ed7a8260
-              name: 'int {#IF.NAME} ({#IF.ALIAS}): in pkts unicast'
-              type: DEPENDENT
-              key: 'net.if.in.unicasts[ifInUcastPkts.{#SNMPINDEX}]'
-              history: 14d
-              trends: 90d
-              units: pps
-              description: |
-                MIB: IF-MIB - RFC 2863
-                The number of inbound packets which were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol.  One possible reason for discarding such a packet could be to free up buffer space.  Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.
-              preprocessing:
-                - type: SNMP_WALK_VALUE
                   parameters:
-                    - '1.3.6.1.2.1.2.2.1.11.{#SNMPINDEX}'
-                    - '0'
-                - type: CHANGE_PER_SECOND
+                    - ''
                 - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
               master_item:
                 key: walk.discovery.net.if
               tags:
@@ -199,7 +169,8 @@ zabbix_export:
             - uuid: ab910e997a494849935cc11ff0d9f8c9
               name: 'int {#IF.NAME} ({#IF.ALIAS}): bits received'
               type: DEPENDENT
-              key: 'net.if.in[ifHCInOctets.{#SNMPINDEX}]'
+              key: 'net.if.in.[octets.bps.{#SNMPINDEX}]'
+              delay: '0'
               history: 14d
               trends: 180d
               units: bps
@@ -212,12 +183,45 @@ zabbix_export:
                     - '1.3.6.1.2.1.31.1.1.1.6.{#SNMPINDEX}'
                     - '0'
                 - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
                 - type: MULTIPLIER
                   parameters:
                     - '8'
                 - type: DISCARD_UNCHANGED_HEARTBEAT
                   parameters:
                     - 1h
+              master_item:
+                key: walk.discovery.net.if
+              tags:
+                - tag: component
+                  value: interface
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IF.NAME}'
+            - uuid: feececa3f2f04ce2b7a3e437ed7a8260
+              name: 'int {#IF.NAME} ({#IF.ALIAS}): in pkts unicast'
+              type: DEPENDENT
+              key: 'net.if.in.[unicast.pkts.{#SNMPINDEX}]'
+              delay: '0'
+              history: 14d
+              trends: 90d
+              units: pps
+              description: |
+                MIB: IF-MIB - RFC 2863
+                The number of inbound packets which were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol.  One possible reason for discarding such a packet could be to free up buffer space.  Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.31.1.1.1.7.{#SNMPINDEX}'
+                    - '0'
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
               master_item:
                 key: walk.discovery.net.if
               tags:
@@ -230,7 +234,8 @@ zabbix_export:
             - uuid: e344a9420ddf4754a745c46c9d782f50
               name: 'int {#IF.NAME} ({#IF.ALIAS}): out pkts broadcast'
               type: DEPENDENT
-              key: 'net.if.out.broadcast[ifOutBroadcastPkts.{#SNMPINDEX}]'
+              key: 'net.if.out.[broadcast.pkts.{#SNMPINDEX}]'
+              delay: '0'
               history: 14d
               trends: 90d
               units: pps
@@ -240,10 +245,45 @@ zabbix_export:
               preprocessing:
                 - type: SNMP_WALK_VALUE
                   parameters:
-                    - '1.3.6.1.2.1.31.1.1.1.5.{#SNMPINDEX}'
+                    - '1.3.6.1.2.1.31.1.1.1.13.{#SNMPINDEX}'
                     - '0'
                 - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
                 - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: walk.discovery.net.if
+              tags:
+                - tag: component
+                  value: interface
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IF.NAME}'
+            - uuid: d49723461ed146a8a1d3755a07034398
+              name: 'int {#IF.NAME} ({#IF.ALIAS}): in pkts discarded'
+              type: DEPENDENT
+              key: 'net.if.out.[discards.pkts.{#SNMPINDEX}]'
+              delay: '0'
+              history: 14d
+              trends: 60d
+              units: pps
+              description: |
+                MIB: IF-MIB - RFC 2863
+                The number of inbound packets which were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol.  One possible reason for discarding such a packet could be to free up buffer space.  Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.2.2.1.13.{#SNMPINDEX}'
+                    - '0'
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
               master_item:
                 key: walk.discovery.net.if
               tags:
@@ -256,7 +296,8 @@ zabbix_export:
             - uuid: d16d6319e5fa4298adf5fbb2441c08a6
               name: 'int {#IF.NAME} ({#IF.ALIAS}): out pkts discarded'
               type: DEPENDENT
-              key: 'net.if.out.discards[ifOutDiscards.{#SNMPINDEX}]'
+              key: 'net.if.out.[discards.pps.{#SNMPINDEX}]'
+              delay: '0'
               history: 14d
               trends: 60d
               units: pps
@@ -269,7 +310,11 @@ zabbix_export:
                     - '1.3.6.1.2.1.2.2.1.19.{#SNMPINDEX}'
                     - '0'
                 - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
                 - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
               master_item:
                 key: walk.discovery.net.if
               tags:
@@ -282,7 +327,8 @@ zabbix_export:
             - uuid: 4bc23f8502d9457da4690f5cdd8587f5
               name: 'int {#IF.NAME} ({#IF.ALIAS}): out pkts with errors'
               type: DEPENDENT
-              key: 'net.if.out.errors[ifOutErrors.{#SNMPINDEX}]'
+              key: 'net.if.out.[errors.pkts.{#SNMPINDEX}]'
+              delay: '0'
               history: 14d
               trends: 60d
               units: pps
@@ -295,7 +341,11 @@ zabbix_export:
                     - '1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}'
                     - '0'
                 - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
                 - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
               master_item:
                 key: walk.discovery.net.if
               tags:
@@ -308,7 +358,8 @@ zabbix_export:
             - uuid: 160ee75d02b3443d8c421fade4f49515
               name: 'int {#IF.NAME} ({#IF.ALIAS}): out pkts multicast'
               type: DEPENDENT
-              key: 'net.if.out.multicast[ifOutMulticastPkts.{#SNMPINDEX}]'
+              key: 'net.if.out.[multicast.pkts.{#SNMPINDEX}]'
+              delay: '0'
               history: 14d
               trends: 90d
               units: pps
@@ -318,36 +369,14 @@ zabbix_export:
               preprocessing:
                 - type: SNMP_WALK_VALUE
                   parameters:
-                    - '1.3.6.1.2.1.31.1.1.1.4.{#SNMPINDEX}'
+                    - '1.3.6.1.2.1.31.1.1.1.12.{#SNMPINDEX}'
                     - '0'
                 - type: CHANGE_PER_SECOND
-                - type: DISCARD_UNCHANGED
-              master_item:
-                key: walk.discovery.net.if
-              tags:
-                - tag: component
-                  value: interface
-                - tag: component
-                  value: network
-                - tag: interface
-                  value: '{#IF.NAME}'
-            - uuid: 9954416653364aafbac8e1d7af71aa8f
-              name: 'int {#IF.NAME} ({#IF.ALIAS}): out pkts unicast'
-              type: DEPENDENT
-              key: 'net.if.out.unicasts[ifOutUcastPkts.{#SNMPINDEX}]'
-              history: 14d
-              trends: 60d
-              units: pps
-              description: |
-                MIB: IF-MIB - RFC2863
-                The number of outbound packets which were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol. One possible reason for discarding such a packet could be to free up buffer space. Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.
-              preprocessing:
-                - type: SNMP_WALK_VALUE
                   parameters:
-                    - '1.3.6.1.2.1.2.2.1.17.{#SNMPINDEX}'
-                    - '0'
-                - type: CHANGE_PER_SECOND
+                    - ''
                 - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
               master_item:
                 key: walk.discovery.net.if
               tags:
@@ -360,7 +389,8 @@ zabbix_export:
             - uuid: 9bf350b347a940b1bec5c1bdee6805e5
               name: 'int {#IF.NAME} ({#IF.ALIAS}): bits sent'
               type: DEPENDENT
-              key: 'net.if.out[ifHCOutOctets.{#SNMPINDEX}]'
+              key: 'net.if.out.[octets.bps.{#SNMPINDEX}]'
+              delay: '0'
               history: 14d
               trends: 180d
               units: bps
@@ -373,6 +403,8 @@ zabbix_export:
                     - '1.3.6.1.2.1.31.1.1.1.10.{#SNMPINDEX}'
                     - '0'
                 - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
                 - type: MULTIPLIER
                   parameters:
                     - '8'
@@ -388,13 +420,45 @@ zabbix_export:
                   value: network
                 - tag: interface
                   value: '{#IF.NAME}'
+            - uuid: 9954416653364aafbac8e1d7af71aa8f
+              name: 'int {#IF.NAME} ({#IF.ALIAS}): out pkts unicast'
+              type: DEPENDENT
+              key: 'net.if.out.[ucast.pkts.{#SNMPINDEX}]'
+              delay: '0'
+              history: 14d
+              trends: 60d
+              units: pps
+              description: |
+                MIB: IF-MIB - RFC2863
+                The number of outbound packets which were chosen to be discarded even though no errors had been detected to prevent their being deliverable to a higher-layer protocol. One possible reason for discarding such a packet could be to free up buffer space. Discontinuities in the value of this counter can occur at re-initialization of the management system, and at other times as indicated by the value of ifCounterDiscontinuityTime.
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.31.1.1.1.11.{#SNMPINDEX}'
+                    - '0'
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: walk.discovery.net.if
+              tags:
+                - tag: component
+                  value: interface
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IF.NAME}'
             - uuid: 5725bd6c82e24bdbbb383cb4b3876c74
               name: 'int {#IF.NAME} ({#IF.ALIAS}): speed'
               type: DEPENDENT
-              key: 'net.if.speed[ifHighSpeed.{#SNMPINDEX}]'
+              key: 'net.if.speed.[{#SNMPINDEX}]'
+              delay: '0'
               history: 7d
               trends: 60d
-              units: bps
+              units: mbps
               description: |
                 MIB: IF-MIB - RFC 2863
                 An estimate of the interface's current bandwidth in units of 1,000,000 bits per second. If this object reports a value of `n' then the speed of the interface is somewhere in the range of `n-500,000' to`n+499,999'.  For interfaces which do not vary in bandwidth or for those where no accurate estimation can be made, this object should contain the nominal bandwidth. For a sub-layer which has no concept of bandwidth, this object should be zero.
@@ -403,9 +467,6 @@ zabbix_export:
                   parameters:
                     - '1.3.6.1.2.1.31.1.1.1.15.{#SNMPINDEX}'
                     - '0'
-                - type: MULTIPLIER
-                  parameters:
-                    - '1000000'
                 - type: DISCARD_UNCHANGED_HEARTBEAT
                   parameters:
                     - 2h
@@ -421,7 +482,8 @@ zabbix_export:
             - uuid: 3ed49f8b3b2c4270ab698daa107c819e
               name: 'int {#IF.NAME} ({#IF.ALIAS}): operational status'
               type: DEPENDENT
-              key: 'net.if.status[ifOperStatus.{#SNMPINDEX}]'
+              key: 'net.if.status.[operstatus.{#SNMPINDEX}]'
+              delay: '0'
               history: 14d
               trends: 60d
               description: |
@@ -448,9 +510,9 @@ zabbix_export:
                   value: '{#IF.NAME}'
               trigger_prototypes:
                 - uuid: 4a8300b628ff4afda2bcf57001b10bb9
-                  expression: '{$IFCONTROL:"{#IF.NAME}"}=1 and last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#2))'
+                  expression: '{$IFCONTROL:"{#IF.NAME}"}=1 and last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}],#2))'
                   recovery_mode: RECOVERY_EXPRESSION
-                  recovery_expression: 'last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:"{#IF.NAME}"}=0'
+                  recovery_expression: 'last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:"{#IF.NAME}"}=0'
                   name: 'int {#IF.NAME} ({#IF.ALIAS}): link down'
                   opdata: 'Current state: {ITEM.LASTVALUE1}'
                   priority: AVERAGE
@@ -470,7 +532,8 @@ zabbix_export:
             - uuid: 3e0ba885e0d847adbed646b793f48c62
               name: 'int {#IF.NAME} ({#IF.ALIAS}): int type'
               type: DEPENDENT
-              key: 'net.if.type[ifType.{#SNMPINDEX}]'
+              key: 'net.if.type.[{#SNMPINDEX}]'
+              delay: '0'
               history: 14d
               trends: '0'
               description: |
@@ -498,25 +561,25 @@ zabbix_export:
           trigger_prototypes:
             - uuid: eecb508bc797415ba7f7d4363b795575
               expression: |
-                change(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])<0 
+                change(/custom.if-mib/net.if.speed.[{#SNMPINDEX}])<0 
                 and 
-                last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])>0 
+                last(/custom.if-mib/net.if.speed.[{#SNMPINDEX}])>0 
                 and
-                last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])<>10000000
+                last(/custom.if-mib/net.if.speed.[{#SNMPINDEX}])<>10000000
                 and (
-                last(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=6 or
-                last(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=7 or
-                last(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=11 or
-                last(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=62 or
-                last(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=69 or
-                last(/custom.if-mib/net.if.type[ifType.{#SNMPINDEX}])=117
+                last(/custom.if-mib/net.if.type.[{#SNMPINDEX}])=6 or
+                last(/custom.if-mib/net.if.type.[{#SNMPINDEX}])=7 or
+                last(/custom.if-mib/net.if.type.[{#SNMPINDEX}])=11 or
+                last(/custom.if-mib/net.if.type.[{#SNMPINDEX}])=62 or
+                last(/custom.if-mib/net.if.type.[{#SNMPINDEX}])=69 or
+                last(/custom.if-mib/net.if.type.[{#SNMPINDEX}])=117
                 )
                 and
-                (last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2)
+                (last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}])<>2)
               recovery_mode: RECOVERY_EXPRESSION
               recovery_expression: |
-                (change(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])>0 and last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}],#2)>0) or
-                (last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])=2)
+                (change(/custom.if-mib/net.if.speed.[{#SNMPINDEX}])>0 and last(/custom.if-mib/net.if.speed.[{#SNMPINDEX}],#2)>0) or
+                (last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}])=2)
               name: 'int {#IF.NAME} ({#IF.ALIAS}): ethernet has changed to lower speed than it was before'
               opdata: 'current reported speed: {ITEM.LASTVALUE1}'
               priority: INFO
@@ -524,8 +587,8 @@ zabbix_export:
               manual_close: 'YES'
               dependencies:
                 - name: 'int {#IF.NAME} ({#IF.ALIAS}): link down'
-                  expression: '{$IFCONTROL:"{#IF.NAME}"}=1 and last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#2))'
-                  recovery_expression: 'last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:"{#IF.NAME}"}=0'
+                  expression: '{$IFCONTROL:"{#IF.NAME}"}=1 and last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}],#2))'
+                  recovery_expression: 'last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:"{#IF.NAME}"}=0'
               tags:
                 - tag: interface
                   value: '{#IF.NAME}'
@@ -533,13 +596,13 @@ zabbix_export:
                   value: performance
             - uuid: 4f13f75a79ac496ea309663e8d415983
               expression: |
-                (avg(/custom.if-mib/net.if.in[ifHCInOctets.{#SNMPINDEX}],15m)>({$IF.UTIL.MAX:"{#IF.NAME}"}/100)*last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}]) or
-                avg(/custom.if-mib/net.if.out[ifHCOutOctets.{#SNMPINDEX}],15m)>({$IF.UTIL.MAX:"{#IF.NAME}"}/100)*last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])) and
-                last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])>0
+                (avg(/custom.if-mib/net.if.in.[octets.bps.{#SNMPINDEX}],15m)>({$IF.UTIL.MAX:"{#IF.NAME}"}/100)*last(/custom.if-mib/net.if.speed.[{#SNMPINDEX}]) or
+                avg(/custom.if-mib/net.if.out.[octets.bps.{#SNMPINDEX}],15m)>({$IF.UTIL.MAX:"{#IF.NAME}"}/100)*last(/custom.if-mib/net.if.speed.[{#SNMPINDEX}])) and
+                last(/custom.if-mib/net.if.speed.[{#SNMPINDEX}])>0
               recovery_mode: RECOVERY_EXPRESSION
               recovery_expression: |
-                avg(/custom.if-mib/net.if.in[ifHCInOctets.{#SNMPINDEX}],15m)<(({$IF.UTIL.MAX:"{#IF.NAME}"}-3)/100)*last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}]) and
-                avg(/custom.if-mib/net.if.out[ifHCOutOctets.{#SNMPINDEX}],15m)<(({$IF.UTIL.MAX:"{#IF.NAME}"}-3)/100)*last(/custom.if-mib/net.if.speed[ifHighSpeed.{#SNMPINDEX}])
+                avg(/custom.if-mib/net.if.in.[octets.bps.{#SNMPINDEX}],15m)<(({$IF.UTIL.MAX:"{#IF.NAME}"}-3)/100)*last(/custom.if-mib/net.if.speed.[{#SNMPINDEX}]) and
+                avg(/custom.if-mib/net.if.out.[octets.bps.{#SNMPINDEX}],15m)<(({$IF.UTIL.MAX:"{#IF.NAME}"}-3)/100)*last(/custom.if-mib/net.if.speed.[{#SNMPINDEX}])
               name: 'int {#IF.NAME} ({#IF.ALIAS}): high bandwidth usage'
               event_name: 'int {#IF.NAME}({#IF.ALIAS}): high bandwidth usage (>{$IF.UTIL.MAX:"{#IF.NAME}"}%)'
               opdata: 'In: {ITEM.LASTVALUE1}, out: {ITEM.LASTVALUE3}, speed: {ITEM.LASTVALUE2}'
@@ -548,8 +611,8 @@ zabbix_export:
               manual_close: 'YES'
               dependencies:
                 - name: 'int {#IF.NAME} ({#IF.ALIAS}): link down'
-                  expression: '{$IFCONTROL:"{#IF.NAME}"}=1 and last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#2))'
-                  recovery_expression: 'last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:"{#IF.NAME}"}=0'
+                  expression: '{$IFCONTROL:"{#IF.NAME}"}=1 and last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}],#2))'
+                  recovery_expression: 'last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:"{#IF.NAME}"}=0'
               tags:
                 - tag: interface
                   value: '{#IF.NAME}'
@@ -557,12 +620,12 @@ zabbix_export:
                   value: performance
             - uuid: 0085c50688854ed0bf39ca9adc44e914
               expression: |
-                min(/custom.if-mib/net.if.in.errors[ifInErrors.{#SNMPINDEX}],5m)>{$IF.ERRORS.WARN:"{#IF.NAME}"}
-                or min(/custom.if-mib/net.if.out.errors[ifOutErrors.{#SNMPINDEX}],5m)>{$IF.ERRORS.WARN:"{#IF.NAME}"}
+                min(/custom.if-mib/net.if.in.[errors.pkts.{#SNMPINDEX}],5m)>{$IF.ERRORS.WARN:"{#IF.NAME}"}
+                or min(/custom.if-mib/net.if.out.[errors.pkts.{#SNMPINDEX}],5m)>{$IF.ERRORS.WARN:"{#IF.NAME}"}
               recovery_mode: RECOVERY_EXPRESSION
               recovery_expression: |
-                max(/custom.if-mib/net.if.in.errors[ifInErrors.{#SNMPINDEX}],5m)<{$IF.ERRORS.WARN:"{#IF.NAME}"}*0.8
-                and max(/custom.if-mib/net.if.out.errors[ifOutErrors.{#SNMPINDEX}],5m)<{$IF.ERRORS.WARN:"{#IF.NAME}"}*0.8
+                max(/custom.if-mib/net.if.in.[errors.pkts.{#SNMPINDEX}],5m)<{$IF.ERRORS.WARN:"{#IF.NAME}"}*0.8
+                and max(/custom.if-mib/net.if.out.[errors.pkts.{#SNMPINDEX}],5m)<{$IF.ERRORS.WARN:"{#IF.NAME}"}*0.8
               name: 'int {#IF.NAME} ({#IF.ALIAS}): high error rate'
               event_name: 'int {#IF.NAME}({#IF.ALIAS}): High error rate (>{$IF.ERRORS.WARN:"{#IF.NAME}"} for 5m)'
               opdata: 'errors in: {ITEM.LASTVALUE1}, errors out: {ITEM.LASTVALUE2}'
@@ -571,8 +634,8 @@ zabbix_export:
               manual_close: 'YES'
               dependencies:
                 - name: 'int {#IF.NAME} ({#IF.ALIAS}): link down'
-                  expression: '{$IFCONTROL:"{#IF.NAME}"}=1 and last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}],#2))'
-                  recovery_expression: 'last(/custom.if-mib/net.if.status[ifOperStatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:"{#IF.NAME}"}=0'
+                  expression: '{$IFCONTROL:"{#IF.NAME}"}=1 and last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}])=2 and (last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}],#1)<>last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}],#2))'
+                  recovery_expression: 'last(/custom.if-mib/net.if.status.[operstatus.{#SNMPINDEX}])<>2 or {$IFCONTROL:"{#IF.NAME}"}=0'
               tags:
                 - tag: interface
                   value: '{#IF.NAME}'
@@ -585,9 +648,6 @@ zabbix_export:
           preprocessing:
             - type: SNMP_WALK_TO_JSON
               parameters:
-                - '{#IF.DESCR}'
-                - 1.3.6.1.2.1.2.2.1.2
-                - '0'
                 - '{#IF.TYPE}'
                 - 1.3.6.1.2.1.2.2.1.3
                 - '0'
@@ -621,10 +681,6 @@ zabbix_export:
         - macro: '{$NET.IF.IF.ALIAS.MATCHES}'
           value: '.*'
         - macro: '{$NET.IF.IF.ALIAS.NOT.MATCHES}'
-          value: CHANGE_IF_NEEDED
-        - macro: '{$NET.IF.IF.DESCR.MATCHES}'
-          value: '.*'
-        - macro: '{$NET.IF.IF.DESCR.NOT.MATCHES}'
           value: CHANGE_IF_NEEDED
         - macro: '{$NET.IF.IF.NAME.MATCHES}'
           value: '^.*$'
