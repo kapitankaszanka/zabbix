@@ -16,8 +16,8 @@ zabbix_export:
         - uuid: 2ccfcb66a41348a9ab486531258bea59
           name: 'rest-api - service available'
           type: SCRIPT
-          key: mt.restapi.available
-          delay: 1h
+          key: mt.restapi.get.available
+          delay: 5m
           history: 1d
           trends: 180d
           params: |
@@ -37,6 +37,9 @@ zabbix_export:
           valuemap:
             name: 'http response Status code'
           preprocessing:
+            - type: CHECK_JSON_ERROR
+              parameters:
+                - $.Error.first()
             - type: DISCARD_UNCHANGED_HEARTBEAT
               parameters:
                 - 1d
@@ -54,7 +57,7 @@ zabbix_export:
               value: system
           triggers:
             - uuid: 109f28e213ff4ea1962afcff1a334a52
-              expression: 'last(/custom.mikrotik-api/mt.restapi.available) <> 200'
+              expression: 'last(/custom.mikrotik-api/mt.restapi.get.available) <> 200'
               name: 'rest-api service not available'
               opdata: 'current value: {ITEM.LASTVALUE1}'
               priority: HIGH
@@ -67,7 +70,7 @@ zabbix_export:
         - uuid: eb843d26c9194d7a8b171da54530461f
           name: 'rest-api - get queue simple'
           type: HTTP_AGENT
-          key: mt.restapi.queue-simple.get
+          key: mt.restapi.get.queue.simple.get
           delay: '{$QUEUE.UPDATE_INTERVAL}'
           history: '0'
           value_type: TEXT
@@ -88,12 +91,41 @@ zabbix_export:
           verify_host: 'YES'
           tags:
             - tag: component
+              value: queue
+            - tag: component
+              value: raw
+        - uuid: 224862bb17964b96b9c33425e9ee22da
+          name: 'rest-api - get bgp sessions'
+          type: HTTP_AGENT
+          key: mt.restapi.get.routing.bgp.session
+          delay: '{$BGP.UPDATE_INTERVAL}'
+          history: '0'
+          value_type: TEXT
+          trends: '0'
+          authtype: BASIC
+          username: '{$API.USER}'
+          password: '{$API.PASSWORD}'
+          preprocessing:
+            - type: CHECK_JSON_ERROR
+              parameters:
+                - $..Error.first()
+          timeout: '{$API.TIMEOUT}'
+          url: 'https://{$API.URL}:{$API.PORT}/rest/routing/bgp/session'
+          query_fields:
+            - name: .proplist
+              value: '.id,established,local.bytes,local.capabilities,local.messages,prefix-count,remote.address,remote.as,remote.bytes,remote.capabilities,remote.id,remote.messages,uptime'
+          verify_peer: 'YES'
+          verify_host: 'YES'
+          tags:
+            - tag: component
+              value: bgp
+            - tag: component
               value: raw
       discovery_rules:
         - uuid: da210c8d84074944b275c62e9e82f6dd
-          name: 'queue simple'
+          name: 'discover queue simple'
           type: DEPENDENT
-          key: mt.restapi.queue.simple
+          key: mt.restapi.discover.queue.simple
           delay: '0'
           lifetime: 1d
           item_prototypes:
@@ -117,7 +149,7 @@ zabbix_export:
                   parameters:
                     - '{$QUEUE.UPDATE_INTERVAL}'
               master_item:
-                key: mt.restapi.queue-simple.get
+                key: mt.restapi.get.queue.simple.get
               tags:
                 - tag: component
                   value: queue
@@ -145,7 +177,7 @@ zabbix_export:
                   parameters:
                     - '{$QUEUE.UPDATE_INTERVAL}'
               master_item:
-                key: mt.restapi.queue-simple.get
+                key: mt.restapi.get.queue.simple.get
               tags:
                 - tag: component
                   value: queue
@@ -156,7 +188,7 @@ zabbix_export:
             - uuid: c7b1f655b35743d7a7e6d229fb9cbfe5
               name: 'queue {#QUEUE.TARGET} max limit download'
               type: DEPENDENT
-              key: 'mt.restapi.queue.simple.[max-limit.in.{#QUEUE.ID}]'
+              key: 'mt.restapi.queue.simple.[in.{#QUEUE.ID}]'
               delay: '0'
               history: 1d
               trends: 180d
@@ -173,7 +205,7 @@ zabbix_export:
                   parameters:
                     - '{$QUEUE.UPDATE_INTERVAL}'
               master_item:
-                key: mt.restapi.queue-simple.get
+                key: mt.restapi.get.queue.simple.get
               tags:
                 - tag: component
                   value: queue
@@ -184,7 +216,7 @@ zabbix_export:
             - uuid: e646ee6d141149439ede7661f6ddf986
               name: 'queue {#QUEUE.TARGET} max limit upload'
               type: DEPENDENT
-              key: 'mt.restapi.queue.simple.[max-limit.out.{#QUEUE.ID}]'
+              key: 'mt.restapi.queue.simple.[out.{#QUEUE.ID}]'
               delay: '0'
               history: 1d
               trends: 180d
@@ -201,7 +233,7 @@ zabbix_export:
                   parameters:
                     - '{$QUEUE.UPDATE_INTERVAL}'
               master_item:
-                key: mt.restapi.queue-simple.get
+                key: mt.restapi.get.queue.simple.get
               tags:
                 - tag: component
                   value: queue
@@ -210,7 +242,7 @@ zabbix_export:
                 - tag: queue
                   value: '{#QUEUE.TARGET}'
           master_item:
-            key: mt.restapi.queue-simple.get
+            key: mt.restapi.get.queue.simple.get
           lld_macro_paths:
             - lld_macro: '{#QUEUE.ID}'
               path: '$[''.id'']'
@@ -218,17 +250,434 @@ zabbix_export:
               path: $.name
             - lld_macro: '{#QUEUE.TARGET}'
               path: $.target
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+        - uuid: 780b9ec10edc48b3ae3e11704ec7847c
+          name: 'discover routing bgp session'
+          type: DEPENDENT
+          key: mt.restapi.discover.routing.bgp.session
+          delay: '0'
+          lifetime_type: DELETE_IMMEDIATELY
+          lifetime: '0'
+          item_prototypes:
+            - uuid: 74744680087c4ac695429c3e11eeba5f
+              name: 'bgp peer as{#REMOTE.AS}: established'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[established.{#SESSION.ID}]'
+              delay: '0'
+              history: 1d
+              value_type: CHAR
+              trends: '0'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''established''].first()'
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 12h
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+            - uuid: 17ef9a7605184dd0906429f648590024
+              name: 'bgp peer as{#REMOTE.AS}: local table size'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[local.bytes.{#SESSION.ID}]'
+              delay: '0'
+              history: 1d
+              trends: 90d
+              units: B
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''local.bytes''].first()'
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+            - uuid: fff800d12e4149ac9bba70503ed6282d
+              name: 'bgp peer as{#REMOTE.AS}: local capabilities'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[local.capabilities.{#SESSION.ID}]'
+              delay: '0'
+              history: 14d
+              value_type: CHAR
+              trends: '0'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''local.capabilities''].first()'
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+            - uuid: 0c05564bb7d14ee782dc78bf9398325e
+              name: 'bgp peer as{#REMOTE.AS}: local msg count per second'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[local.messages.{#SESSION.ID}]'
+              delay: '0'
+              history: 1d
+              trends: 60d
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''local.messages''].first()'
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+            - uuid: 128fbac238d44330ab2b7818bdd5d585
+              name: 'bgp peer as{#REMOTE.AS}: prefix count'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[prefix.count.{#SESSION.ID}]'
+              delay: '0'
+              history: 1d
+              trends: 60d
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''prefix-count''].first()'
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+              trigger_prototypes:
+                - uuid: 1f0f8dabeb2d4a1dbbcbc1caf018ae37
+                  expression: |
+                    last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[prefix.count.{#SESSION.ID}])
+                    >
+                    avg(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[prefix.count.{#SESSION.ID}],#5) * 1.25
+                  recovery_mode: NONE
+                  name: 'bgp session as{#REMOTE.AS}: prefix count is higher than before'
+                  opdata: 'prefix: {ITEM.LASTVALUE}'
+                  priority: WARNING
+                  description: 'the trigger fires when the number of prefixes is more than 25% higher than the average of the last 5 values'
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: 'bgp session as{#REMOTE.AS}: session has been restarted'
+                      expression: 'last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[uptime.{#SESSION.ID}]) < 30m'
+                      recovery_expression: 'last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[uptime.{#SESSION.ID}]) > 30m'
+                    - name: 'bgp session as{#REMOTE.AS}: session is down'
+                      expression: 'last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[established.{#SESSION.ID}]) = "false"'
+                      recovery_expression: |
+                        last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[established.{#SESSION.ID}]) = "true"
+                        and 
+                        last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[uptime.{#SESSION.ID}])<5m
+                  tags:
+                    - tag: component
+                      value: bgp
+            - uuid: ad7426891fdd455fb786e4c17bc86dab
+              name: 'bgp peer as{#REMOTE.AS}: remote address'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[remote.address.{#SESSION.ID}]'
+              delay: '0'
+              history: 14d
+              value_type: CHAR
+              trends: '0'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''remote.address''].first()'
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+            - uuid: 4ea6f24219c94a2b94b1ca4ffea05244
+              name: 'bgp peer as{#REMOTE.AS}: remote as'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[remote.as.{#SESSION.ID}]'
+              delay: '0'
+              history: 1d
+              trends: 90d
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''remote.as''].first()'
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+            - uuid: 6e5d66dced9e469cb1e8d26433f8e515
+              name: 'bgp peer as{#REMOTE.AS}: remote table size'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[remote.bytes.{#SESSION.ID}]'
+              delay: '0'
+              history: 1d
+              trends: 90d
+              units: B
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''remote.bytes''].first()'
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+            - uuid: 8cc68ce23c5d4b0f8ecd35306d931fe9
+              name: 'bgp peer as{#REMOTE.AS}: remote capabilities'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[remote.capabilities.{#SESSION.ID}]'
+              delay: '0'
+              history: 14d
+              value_type: CHAR
+              trends: '0'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''remote.capabilities''].first()'
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+            - uuid: a092ef6a180f4845a89b241136569e1c
+              name: 'bgp peer as{#REMOTE.AS}: remote id'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[remote.id.{#SESSION.ID}]'
+              delay: '0'
+              history: 14d
+              value_type: CHAR
+              trends: '0'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''remote.id''].first()'
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+            - uuid: c9b21f05327c46d8bfef47a7417b3530
+              name: 'bgp peer as{#REMOTE.AS}: remote msg count per second'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[remote.messages.{#SESSION.ID}]'
+              delay: '0'
+              history: 1d
+              trends: 60d
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''remote.messages''].first()'
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: DISCARD_UNCHANGED
+                  parameters:
+                    - ''
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+            - uuid: a10bb68ef2b14b779320e0594adae55d
+              name: 'bgp peer as{#REMOTE.AS}: uptime'
+              type: DEPENDENT
+              key: 'mt.restapi.routing.bgp.session.[uptime.{#SESSION.ID}]'
+              delay: '0'
+              history: 1d
+              trends: 14d
+              units: s
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@[''.id''] == ''{#SESSION.ID}'')][''uptime''].first()'
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      function convertToSeconds(timeStr) {
+                        const regex = /(\d+w)?(\d+d)?(\d+h)?(\d+m)?(\d+s)?\d+ms?/;
+                        const matches = regex.exec(timeStr);
+                      
+                        var totalSeconds = 0;
+                      
+                        if (matches) {
+                          const week = matches[1] ? parseInt(matches[1]) * 604800 : 0; // 1 week = 604800 seconds
+                          const days = matches[2] ? parseInt(matches[2]) * 86400 : 0; // 1 day = 86400 seconds
+                          const hours = matches[3] ? parseInt(matches[3]) * 3600 : 0; // 1 hour = 3600 seconds
+                          const minutes = matches[4] ? parseInt(matches[4]) * 60 : 0; // 1 minute = 60 seconds
+                          const seconds = matches[5] ? parseInt(matches[5]) : 0; // 1 second = 1 second
+                      
+                          totalSeconds = week + days + hours + minutes + seconds;
+                        }
+                      
+                        return totalSeconds;
+                      }
+                      
+                      return convertToSeconds(value);
+              master_item:
+                key: mt.restapi.get.routing.bgp.session
+              tags:
+                - tag: 'bgp session'
+                  value: '{#REMOTE.AS}'
+                - tag: component
+                  value: bgp
+                - tag: component
+                  value: service
+              trigger_prototypes:
+                - uuid: e49ca64a0c4d4a2d8dc1003e44596d32
+                  expression: 'last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[uptime.{#SESSION.ID}]) < 30m'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[uptime.{#SESSION.ID}]) > 30m'
+                  name: 'bgp session as{#REMOTE.AS}: session has been restarted'
+                  opdata: 'uptime: {ITEM.LASTVALUE}'
+                  priority: AVERAGE
+                  dependencies:
+                    - name: 'bgp session as{#REMOTE.AS}: session is down'
+                      expression: 'last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[established.{#SESSION.ID}]) = "false"'
+                      recovery_expression: |
+                        last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[established.{#SESSION.ID}]) = "true"
+                        and 
+                        last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[uptime.{#SESSION.ID}])<5m
+                  tags:
+                    - tag: component
+                      value: bgp
+          trigger_prototypes:
+            - uuid: abb7eb9c049e4bfab372f8661f7df64d
+              expression: |
+                avg(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[local.bytes.{#SESSION.ID}],#5) * 1.25
+                >
+                last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[prefix.count.{#SESSION.ID}])
+              recovery_mode: NONE
+              name: 'bgp session as{#REMOTE.AS}: local table is bigger, check session filters'
+              priority: INFO
+              description: 'The trigger fires when the size of the local table is more than 25% larger than the average of the last 5 values.'
+              manual_close: 'YES'
+              dependencies:
+                - name: 'bgp session as{#REMOTE.AS}: session has been restarted'
+                  expression: 'last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[uptime.{#SESSION.ID}]) < 30m'
+                  recovery_expression: 'last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[uptime.{#SESSION.ID}]) > 30m'
+                - name: 'bgp session as{#REMOTE.AS}: session is down'
+                  expression: 'last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[established.{#SESSION.ID}]) = "false"'
+                  recovery_expression: |
+                    last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[established.{#SESSION.ID}]) = "true"
+                    and 
+                    last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[uptime.{#SESSION.ID}])<5m
+              tags:
+                - tag: component
+                  value: bgp
+            - uuid: bafe92c5df4b4ef1a42276d4d987be2a
+              expression: 'last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[established.{#SESSION.ID}]) = "false"'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: |
+                last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[established.{#SESSION.ID}]) = "true"
+                and 
+                last(/custom.mikrotik-api/mt.restapi.routing.bgp.session.[uptime.{#SESSION.ID}])<5m
+              name: 'bgp session as{#REMOTE.AS}: session is down'
+              priority: HIGH
+              dependencies:
+                - name: 'rest-api service not available'
+                  expression: 'last(/custom.mikrotik-api/mt.restapi.get.available) <> 200'
+              tags:
+                - tag: component
+                  value: bgp
+          master_item:
+            key: mt.restapi.get.routing.bgp.session
+          lld_macro_paths:
+            - lld_macro: '{#REMOTE.AS}'
+              path: '$[''remote.as'']'
+            - lld_macro: '{#SESSION.ID}'
+              path: '$[''.id'']'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
       macros:
         - macro: '{$API.PASSWORD}'
           type: SECRET_TEXT
         - macro: '{$API.PORT}'
           value: '4443'
         - macro: '{$API.TIMEOUT}'
-          value: 1m
+          value: 30s
         - macro: '{$API.URL}'
           description: 'Device url that server will connect to: r1.router.lizard.pl'
         - macro: '{$API.USER}'
           type: SECRET_TEXT
+        - macro: '{$BGP.UPDATE_INTERVAL}'
+          value: 5m
         - macro: '{$QUEUE.UPDATE_INTERVAL}'
           value: 4h
           description: 'Update interval is connected with discard harthbeat.'
