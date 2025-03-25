@@ -46,6 +46,7 @@ create_json_record() {
     records_json=""
     first=1
     record_id=1
+    answer_to_parse=$(echo "$answer_output" | grep "$name")
     pars_record_output() {
         while IFS= read -r line; do
             if [ -n "$line" ]; then
@@ -71,10 +72,13 @@ create_json_record() {
                 fi
                 record_id=$((record_id + 1))
             fi
-        done <<< "$answer_output"
+        done <<< "$answer_to_parse"
     }
 
-    if echo "$answer_output" | grep -q "communications error"; then
+    if echo "$answer_output" | grep -q "timed out"; then
+        echo "{\"Error\": \"Timed out\"}"
+        exit 1
+    elif echo "$answer_output" | grep -q "communications error"; then
         echo "{\"Error\": \"Communications error\"}"
         exit 1
     else
@@ -88,11 +92,9 @@ default_record_type="A"
 
 setup_arguments $1 $2 $3
 
-answer_output=$(dig $server_arg "$name" "$record_type" +noall +answer)
-query_stats=$(dig $server_arg "$name" "$record_type" +noall +stats)
-query_time=$(echo "$query_stats" | grep "Query time:" | awk '{print $4}')
+answer_output=$(dig $server_arg "$name" "$record_type" +noall +answer +stats +timeout=1)
+query_time=$(echo "$answer_output" | grep "Query time:" | awk '{print $4}')
 query_msg_size=$(echo "$query_stats" | grep "MSG SIZE" | awk '{print $5}')
-
 
 create_json_record
 
