@@ -94,7 +94,7 @@ setup_arguments $1 $2 $3
 
 answer_output=$(dig $server_arg "$name" "$record_type" +noall +answer +stats +timeout=1)
 query_time=$(echo "$answer_output" | grep "Query time:" | awk '{print $4}')
-query_msg_size=$(echo "$query_stats" | grep "MSG SIZE" | awk '{print $5}')
+query_msg_size=$(echo "$answer_output" | grep "MSG SIZE" | awk '{print $5}')
 
 create_json_record
 
