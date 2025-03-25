@@ -1,0 +1,173 @@
+zabbix_export:
+  version: '7.2'
+  template_groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+    - uuid: b8e424c574984774a6fb1eb4eb4f99a3
+      name: Templates/Custom
+  templates:
+    - uuid: bcfa43ad15e247dfb6dc7b414e61753a
+      template: custom.linux.agent.dns_checker
+      name: custom.linux.agent.dns_checker
+      description: |
+        Verification of domain name resolution using a script. Requires bind-utils to work. 
+        Script: https://github.com/kapitankaszanka/zabbix/scripts
+      groups:
+        - name: Templates
+        - name: Templates/Custom
+      items:
+        - uuid: 8e35c74c821d4b87addd61d8d7191209
+          name: 'dns check query res msg size'
+          type: DEPENDENT
+          key: linux.agent.dns_checker.query_res_msg_size
+          history: 1d
+          trends: 90d
+          units: B
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.query_msg_size
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          master_item:
+            key: 'system.run["/usr/local/bin/zabbix_script/dns_checker.sh {$DNS.SERVER} {$DOMAIN} {$RECORD.TYPE}"]'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: dns
+        - uuid: 897af3a17b1b4336b5accd90b40af98b
+          name: 'dns check query time'
+          type: DEPENDENT
+          key: linux.agent.dns_checker.query_time
+          history: 1d
+          trends: 90d
+          units: ms
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.query_time
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          master_item:
+            key: 'system.run["/usr/local/bin/zabbix_script/dns_checker.sh {$DNS.SERVER} {$DOMAIN} {$RECORD.TYPE}"]'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: dns
+        - uuid: 893a6aa9660d4855b202f3cc8f4ba5b0
+          name: 'dns get info'
+          key: 'system.run["/usr/local/bin/zabbix_script/dns_checker.sh {$DNS.SERVER} {$DOMAIN} {$RECORD.TYPE}"]'
+          delay: '{$UPDATE.INTERVAL}'
+          history: '0'
+          value_type: TEXT
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: dns
+      discovery_rules:
+        - uuid: 78b7adaf617a4b07bc33857b6fece590
+          name: linux.agent.dns_checker.query_time
+          type: DEPENDENT
+          key: linux.agent.dns_checker.respone
+          lifetime: 1d
+          item_prototypes:
+            - uuid: 96a430cf329247978d54f92e1f268c94
+              name: 'dns #{#RECORD.ID} {#RECORD.NAME} record class'
+              type: DEPENDENT
+              key: 'linux.agent.dns_checker.[class.{#RECORD.ID}]'
+              history: 1d
+              value_type: CHAR
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.records[?(@.id == ''{#RECORD.ID}'')].class.first()'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: 'system.run["/usr/local/bin/zabbix_script/dns_checker.sh {$DNS.SERVER} {$DOMAIN} {$RECORD.TYPE}"]'
+              tags:
+                - tag: component
+                  value: service
+                - tag: service
+                  value: dns
+            - uuid: bc3bd5e47a5f496cb6bea1a469c01485
+              name: 'dns #{#RECORD.ID} {#RECORD.NAME} record data'
+              type: DEPENDENT
+              key: 'linux.agent.dns_checker.[data.{#RECORD.ID}]'
+              history: 1d
+              value_type: CHAR
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.records[?(@.id == ''{#RECORD.ID}'')].data..first()'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: 'system.run["/usr/local/bin/zabbix_script/dns_checker.sh {$DNS.SERVER} {$DOMAIN} {$RECORD.TYPE}"]'
+              tags:
+                - tag: component
+                  value: service
+                - tag: service
+                  value: dns
+            - uuid: 014c3e0d369942f584701636a8463334
+              name: 'dns #{#RECORD.ID} {#RECORD.NAME} record ttl'
+              type: DEPENDENT
+              key: 'linux.agent.dns_checker.[ttl.{#RECORD.ID}]'
+              history: 1d
+              value_type: CHAR
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.records[?(@.id == ''{#RECORD.ID}'')].ttl.first()'
+                - type: DISCARD_UNCHANGED
+              master_item:
+                key: 'system.run["/usr/local/bin/zabbix_script/dns_checker.sh {$DNS.SERVER} {$DOMAIN} {$RECORD.TYPE}"]'
+              tags:
+                - tag: component
+                  value: service
+                - tag: service
+                  value: dns
+            - uuid: ab80543ed8e74d6f811ca54bd32c139e
+              name: 'dns #{#RECORD.ID} {#RECORD.NAME} record type'
+              type: DEPENDENT
+              key: 'linux.agent.dns_checker.[type.{#RECORD.ID}]'
+              history: 1d
+              value_type: CHAR
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.records[?(@.id == ''{#RECORD.ID}'')].type.first()'
+              master_item:
+                key: 'system.run["/usr/local/bin/zabbix_script/dns_checker.sh {$DNS.SERVER} {$DOMAIN} {$RECORD.TYPE}"]'
+              tags:
+                - tag: component
+                  value: service
+                - tag: service
+                  value: dns
+          master_item:
+            key: 'system.run["/usr/local/bin/zabbix_script/dns_checker.sh {$DNS.SERVER} {$DOMAIN} {$RECORD.TYPE}"]'
+          lld_macro_paths:
+            - lld_macro: '{#RECORD.ID}'
+              path: $.id
+            - lld_macro: '{#RECORD.NAME}'
+              path: $.name
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.records
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+      macros:
+        - macro: '{$DNS.SERVER}'
+          description: 'Not required. DNS server that will be queried.'
+        - macro: '{$DOMAIN}'
+          value: example.com
+          description: 'Required. Domain to query.'
+        - macro: '{$RECORD.TYPE}'
+          description: 'Not required. The type of record that will be queried.'
+        - macro: '{$UPDATE.INTERVAL}'
+          value: 5m
