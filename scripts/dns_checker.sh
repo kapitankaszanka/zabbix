@@ -62,7 +62,7 @@ create_json_record() {
                     if (field5 ~ /^".*"$/) {
                         field5 = substr(field5, 2, length(field5)-2)
                     }
-                    printf("{\"id\": %d, \"name\": \"%s\", \"ttl\": \"%s\", \"class\": \"%s\", \"type\": \"%s\", \"data\": \"%s\"}", id, field1, field2, field3, field4, field5);
+                    printf("{\"id\": %d, \"name\": \"%s\", \"ttl\": \"%d\", \"class\": \"%s\", \"type\": \"%s\", \"data\": \"%s\"}", id, field1, field2, field3, field4, field5);
                 }')
                 if [ $first -eq 1 ]; then
                     records_json="$record_obj"
@@ -95,8 +95,8 @@ setup_arguments $1 $2 $3
 answer_output=$(dig $server_arg "$name" "$record_type" +noall +answer +stats +timeout=1)
 query_time=$(echo "$answer_output" | grep "Query time:" | awk '{print $4}')
 query_msg_size=$(echo "$answer_output" | grep "MSG SIZE" | awk '{print $5}')
-
 create_json_record
 
 json_output="{\"query_time\": \"${query_time}\",\"query_msg_size\": \"${query_msg_size}\", \"records\": [${records_json}]}"
+
 echo "$json_output"
