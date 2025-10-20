@@ -1,21 +1,11 @@
 <pre>
   <p align=center>
-                                    bbbbbbbb           bbbbbbbb                                        
-ZZZZZZZZZZZZZZZZZZZ                 b::::::b           b::::::b              iiii                      
-Z:::::::::::::::::Z                 b::::::b           b::::::b             i::::i                     
-Z:::::::::::::::::Z                 b::::::b           b::::::b              iiii                      
-Z:::ZZZZZZZZ:::::Z                   b:::::b            b:::::b                                        
-ZZZZZ     Z:::::Z    aaaaaaaaaaaaa   b:::::bbbbbbbbb    b:::::bbbbbbbbb    iiiiiii xxxxxxx      xxxxxxx
-        Z:::::Z      a::::::::::::a  b::::::::::::::bb  b::::::::::::::bb  i:::::i  x:::::x    x:::::x 
-       Z:::::Z       aaaaaaaaa:::::a b::::::::::::::::b b::::::::::::::::b  i::::i   x:::::x  x:::::x  
-      Z:::::Z                 a::::a b:::::bbbbb:::::::bb:::::bbbbb:::::::b i::::i    x:::::xx:::::x   
-     Z:::::Z           aaaaaaa:::::a b:::::b    b::::::bb:::::b    b::::::b i::::i     x::::::::::x    
-    Z:::::Z          aa::::::::::::a b:::::b     b:::::bb:::::b     b:::::b i::::i      x::::::::x     
-   Z:::::Z          a::::aaaa::::::a b:::::b     b:::::bb:::::b     b:::::b i::::i      x::::::::x     
-ZZZ:::::Z     ZZZZZa::::a    a:::::a b:::::b     b:::::bb:::::b     b:::::b i::::i     x::::::::::x    
-Z::::::ZZZZZZZZ:::Za::::a    a:::::a b:::::bbbbbb::::::bb:::::bbbbbb::::::bi::::::i   x:::::xx:::::x   
-Z:::::::::::::::::Za:::::aaaa::::::a b::::::::::::::::b b::::::::::::::::b i::::::i  x:::::x  x:::::x  
-Z:::::::::::::::::Z a::::::::::aa:::ab:::::::::::::::b  b:::::::::::::::b  i::::::i x:::::x    x:::::x 
-ZZZZZZZZZZZZZZZZZZZ  aaaaaaaaaa  aaaabbbbbbbbbbbbbbbb   bbbbbbbbbbbbbbbb   iiiiiiiixxxxxxx      xxxxxxx 
+ oooooooooooo            .o8        .o8        o8o              
+d'""""""d888'           "888       "888        `"'              
+      .888P    .oooo.    888oooo.   888oooo.  oooo  oooo    ooo 
+     d888'    `P  )88b   d88' `88b  d88' `88b `888   `88b..8P'  
+   .888P       .oP"888   888   888  888   888  888     Y888'    
+  d888'    .P d8(  888   888   888  888   888  888   .o8"'88b   
+.8888888888P  `Y888""8o  `Y8bod8P'  `Y8bod8P' o888o o88'   888o
   </p>
 </pre>
